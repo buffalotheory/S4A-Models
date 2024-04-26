@@ -50,7 +50,7 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
     for i in range(medians.shape[0]):
         for j in range(medians.shape[1]):
             for t in range(num_bins):
-                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :, :, :].astype(medians_dtype))
+                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :].astype(medians_dtype))
             sub_idx += 1
 
     # Save labels
@@ -62,7 +62,7 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
     lbl_pad = len(str(labels.shape[0] * labels.shape[1]))
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
-            np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j, :, :].astype(label_dtype))
+            np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j].astype(label_dtype))
             lbl_idx += 1
 
 def sliding_window_view(arr, window_shape, steps):
