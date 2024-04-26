@@ -46,15 +46,11 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
     print(f"  medians shape {medians.shape}, output_size: {output_size} (pre sliding window)")
     num_bins, num_bands = medians.shape[:2]
 
-    medians2 = sliding_window_view(
-                    medians,
-                    [num_bins, num_bands, output_size[0], output_size[1]],
-                    [1, 1, output_size[0], output_size[1]]
-                )
+    print(f'median shape before sliding window: {medians.shape}, output_size: {output_size}')
+    medians = sliding_window_view(medians, [num_bins, num_bands, output_size[0], output_size[1]], [1, 1, output_size[0], output_size[1]]).squeeze(axis=(0,1))
     # shape: (subpatches_in_row, subpatches_in_col, bins, bands, height, width)
-    print(f"  medians shape {medians2.shape} (post sliding window, pre-squeeze)")
-    medians2 = medians2.squeeze()
-    print(f"  medians shape {medians2.shape} (post sliding window)")
+    print(f'median shape after sliding window: {medians.shape}')
+
     # Save medians
     bins_pad = len(str(medians2.shape[-4]))
     subs_pad = len(str(medians2.shape[0] * medians2.shape[1]))
@@ -64,13 +60,17 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
         for j in range(medians2.shape[1]):
             print(f'  saving {num_bins} bins of information')
             for t in range(num_bins):
-                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :].astype(medians_dtype))
+                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :, :, :].astype(medians_dtype))
             sub_idx += 1
 
     # Save labels
     labels = get_labels(netcdf, output_size, pad_top, pad_bot, pad_left, pad_right)
+    print(f'label shape before sliding window: {labels.shape}, output_size: {output_size}')
     labels = sliding_window_view(labels, output_size, output_size)
-    labels = labels.squeeze()  # shape: (subpatches_in_row, subpatches_in_col, height, width)
+    print(f'label shape after sliding window: {labels.shape}')
+    if len(labels.shape) > 4:
+        labels = labels.squeeze()  # shape: (subpatches_in_row, subpatches_in_col, height, width)
+        print(f'label shape after squeeze: {labels.shape}')
 
     lbl_idx = 0
     lbl_pad = len(str(labels.shape[0] * labels.shape[1]))
@@ -308,6 +308,7 @@ if __name__ == '__main__':
         bands = args.bands
 
     bands = sorted(bands)
+    print(f'bands: {bands}')
 
     if args.output_size is None:
         output_size = [366, 366]
