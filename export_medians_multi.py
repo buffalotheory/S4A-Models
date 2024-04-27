@@ -10,7 +10,7 @@ from functools import partial
 import xarray as xr
 from pycocotools.coco import COCO
 import netCDF4
-
+import os
 
 IMG_SIZE = 366
 BANDS = {
@@ -26,31 +26,45 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
                   padded_patch_width, medians_dtype, label_dtype, group_freq, output_size,
                   pad_top, pad_bot, pad_left, pad_right, patch):
     patch_id, patch_info = patch
+    #print(f'process_patch: out_path={out_path}')
     patch_dir = out_path / mode / f'{patch_id}'
+    print(f'process_patch: patch_dir={patch_dir}')
+    #patch_dir = os.sep.join([out_path, mode, patch_id])
+    #print(f'process_patch: patch_dir(new)={patch_dir}')
     patch_dir.mkdir(exist_ok=True, parents=True)
 
     # if len(list(patch_dir.iterdir())) == num_buckets + 1:
     #     return
 
     # Calculate medians
+    print(f"calculate medians from patch {patch_info['file_name']}, num_buckets: {num_buckets}, group_freq: {group_freq}")
     netcdf = netCDF4.Dataset(root_coco_path / patch_info['file_name'], 'r')
     medians = get_medians(netcdf, 0, num_buckets, group_freq, bands, padded_patch_height,
                           padded_patch_width, output_size, pad_top, pad_bot,
                           pad_left, pad_right, medians_dtype)
 
+    print(f"  medians shape {medians.shape}, output_size: {output_size} (pre sliding window)")
     num_bins, num_bands = medians.shape[:2]
 
-    medians = sliding_window_view(medians, [num_bins, num_bands, output_size[0], output_size[1]], [1, 1, output_size[0], output_size[1]]).squeeze()
+    medians2 = sliding_window_view(
+                    medians,
+                    [num_bins, num_bands, output_size[0], output_size[1]],
+                    [1, 1, output_size[0], output_size[1]]
+                )
     # shape: (subpatches_in_row, subpatches_in_col, bins, bands, height, width)
-
+    print(f"  medians shape {medians2.shape} (post sliding window, pre-squeeze)")
+    medians2 = medians2.squeeze()
+    print(f"  medians shape {medians2.shape} (post sliding window)")
     # Save medians
-    bins_pad = len(str(medians.shape[-4]))
-    subs_pad = len(str(medians.shape[0] * medians.shape[1]))
+    bins_pad = len(str(medians2.shape[-4]))
+    subs_pad = len(str(medians2.shape[0] * medians2.shape[1]))
     sub_idx = 0
-    for i in range(medians.shape[0]):
-        for j in range(medians.shape[1]):
+    print("Saving medians; shape: %s" % str(medians2.shape))
+    for i in range(medians2.shape[0]):
+        for j in range(medians2.shape[1]):
+            print(f'  saving {num_bins} bins of information')
             for t in range(num_bins):
-                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :, :, :].astype(medians_dtype))
+                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :].astype(medians_dtype))
             sub_idx += 1
 
     # Save labels
@@ -62,7 +76,7 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
     lbl_pad = len(str(labels.shape[0] * labels.shape[1]))
     for i in range(labels.shape[0]):
         for j in range(labels.shape[1]):
-            np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j, :, :].astype(label_dtype))
+            np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j].astype(label_dtype))
             lbl_idx += 1
 
 def sliding_window_view(arr, window_shape, steps):
@@ -103,7 +117,11 @@ def sliding_window_view(arr, window_shape, steps):
     outshape = tuple((in_shape - window_shape) // steps + 1)
     # outshape: ([X, (...), Z], ..., [Wx, (...), Wz])
     outshape = outshape + arr.shape[:-len(steps)] + tuple(window_shape)
-    return as_strided(arr, shape=outshape, strides=strides, writeable=False)
+
+    print(f'sliding_window_view: in_shape {in_shape}, outshape: {outshape}, steps: {steps}, step_strides: {step_strides}, strides: {strides}')
+    strided = as_strided(arr, shape=outshape, strides=strides, writeable=False)
+    print(f'sliding_window_view: returning strided shape {strided.shape}')
+    return strided
 
 
 def get_medians(netcdf, start_bin, window, group_freq, bands,
@@ -303,7 +321,7 @@ if __name__ == '__main__':
     # Create medians folder if it doesn't exist
     out_path.mkdir(exist_ok=True, parents=True)
 
-    print(f'Saving into: {out_path}.')
+    print(f'Saving into: {out_path}; output_size: {output_size}')
 
     print(f'\nStart process...')
 
