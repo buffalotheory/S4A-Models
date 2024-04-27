@@ -445,7 +445,7 @@ class ConvLSTM(pl.LightningModule):
         return
 
 
-    def training_epoch_end(self, outputs):
+    def on_train_epoch_end(self, outputs):
         # Calculate average loss over an epoch
         train_loss = np.nanmean(self.epoch_train_losses)
         self.avg_train_losses.append(train_loss)
@@ -462,7 +462,7 @@ class ConvLSTM(pl.LightningModule):
         self.epoch_train_losses = []
 
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self, outputs):
         # Calculate average loss over an epoch
         valid_loss = np.nanmean(self.epoch_valid_losses)
         self.avg_val_losses.append(valid_loss)
