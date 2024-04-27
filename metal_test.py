@@ -1,3 +1,7 @@
+'''
+Test code from https://developer.apple.com/metal/pytorch/
+'''
+
 import torch
 if torch.backends.mps.is_available():
     mps_device = torch.device("mps")
@@ -5,4 +9,3 @@ if torch.backends.mps.is_available():
     print (x)
 else:
     print ("MPS device not found.")
-
