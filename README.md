@@ -5,6 +5,8 @@
 **This repository contains the models and training scripts for reproducing the experiments presented in:**\
 [A Sentinel-2 multi-year, multi-country benchmark dataset for crop classification and segmentation with deep learning](https://ieeexplore.ieee.org/document/9749916).
 
+This is a fork by [Bryant Hansen](https://gitlab.com/bryanthansen)
+
 ### Description
 
 Based on the Sen4AgriNet dataset, we produce two distinct sub-datasets of Sentinel-2 L1C images for experimentation:
@@ -24,6 +26,13 @@ The input of the PAD models is the median of each month of observations from Apr
 For a full reproduction of the experiments presented in the associated publication, please download the netCDF files from one of the following sources: [Dropbox](https://www.dropbox.com/scl/fo/ne0dpq72gi3ayhqj0hg60/h?dl=0&rlkey=b0148zl6yja7ph26bpfms6knt), [Google Drive](https://drive.google.com/drive/folders/1-qKhlaMUPPI7Th7xTE2vIXY2nIowrSiC?usp=sharing) or [HuggingFace Hub](https://huggingface.co/datasets/paren8esis/S4A) (_experimental_). In [this](https://www.dropbox.com/sh/kvgo4r2vin7sbwt/AACzDLNbnSouuZYMk8Y9I4sha?dl=0) Dropbox folder you can also find the COCO files and the weights of the trained models.
 
 ### Requirements
+
+Python 3.11.7 is the current version used at the moment.
+
+Experimentation is performed on an M1-based computer.  Therefore, CUDA will be replaced by [torch.backends.mps](https://developer.apple.com/metal/pytorch/)
+
+ - [ ] Publish an update set of module versions
+ - [ ] Update requirements.txt when everything is tested
 
 This repository was tested on:
 * Python 3.8
