@@ -1,4 +1,4 @@
-arff=0.9
+arff==0.9
 funcy==1.16
 geopandas==0.9.0
 joblib==1.0.1
