@@ -168,7 +168,11 @@ class ConvLSTM(pl.LightningModule):
         self.checkpoint_epoch = checkpoint_epoch
 
         if class_weights is not None:
-            class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())]).cuda()
+            if torch.backends.mps.is_available():
+                mps_device = torch.device("mps")
+                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())], device=mps_device)
+            else:
+                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())]).cuda()
 
             if self.parcel_loss:
                 self.lossfunction = nn.NLLLoss(ignore_index=0, weight=class_weights_tensor, reduction='sum')
