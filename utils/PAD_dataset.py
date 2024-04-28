@@ -355,6 +355,7 @@ class PADDataset(Dataset):
         padded_id = f'{str(subpatch_id).rjust(len(str(self.num_subpatches)), "0")}'
 
         median_files = sorted(path.glob(f'sub{padded_id}_bin*'))
+        print(f'path: {path}, subpatch_id: {subpatch_id}, median_files: glob=sub{padded_id}_bin*, len(median_files): {len(median_files)}, files={median_files}')
 
         if self.fixed_window:
             start_month = 3
@@ -364,7 +365,9 @@ class PADDataset(Dataset):
             end_month = start_bin + self.window_len
 
         for i, bin_idx in enumerate(range(start_month, end_month)):
+            print(f'month idx: {i}, bin_idx: {bin_idx}')
             median = np.load(median_files[bin_idx]).astype(self.medians_dtype)
+            print(f'Loaded file {median_files[bin_idx]}')
             medians[i] = median.copy()
 
         # Read labels
@@ -411,6 +414,9 @@ class PADDataset(Dataset):
         # The data item index (`idx`) corresponds to a single sequence.
         # In order to fetch the correct sequence, we must determine exactly which
         # patch, subpatch and bins it corresponds to.
+
+        # This directory naming convention does not match the export_medians_multi.py script output
+        #print(f'medians_dir: {self.medians_dir}')
         start_bin, patch_id, subpatch_id = self.get_window(idx)
 
         patch_id = self.patch_ids[patch_id]
