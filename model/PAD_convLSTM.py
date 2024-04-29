@@ -36,7 +36,10 @@ def print_model_stats(model):
     pytorch_train_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Total params: {pytorch_total_params}')
     print(f'Trainable params: {pytorch_train_params}')
-    print(f'Peak memory usage: {(torch.cuda.max_memory_allocated() / (1024**2)):.2f} MB\n')
+    if torch.backends.mps.is_available():
+        print(f'Peak memory usage: TODO: port to MPS\n')
+    else:
+        print(f'Peak memory usage: {(torch.cuda.max_memory_allocated() / (1024**2)):.2f} MB\n')
 
 
 def tensor_size(t):
@@ -93,17 +96,29 @@ class CLSTM_cell(nn.Module):
 
     def forward(self, inputs=None, hidden_state=None, seq_len=10):
         if hidden_state is None:
-            hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
-                             self.shape[1]).cuda()
-            cx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
-                             self.shape[1]).cuda()
+            if torch.backends.mps.is_available():
+                mps_device = torch.device("mps")
+                hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
+                                 self.shape[1]).to(mps_device)
+                cx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
+                                 self.shape[1]).to(mps_device)
+            else:
+                hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
+                                 self.shape[1]).cuda()
+                cx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
+                                 self.shape[1]).cuda()
         else:
             hx, cx = hidden_state
         output_inner = []
         for index in range(seq_len):
             if inputs is None:
-                x = torch.zeros(hx.size(0), self.input_channels, self.shape[0],
-                                self.shape[1]).cuda()
+                if torch.backends.mps.is_available():
+                    mps_device = torch.device("mps")
+                    x = torch.zeros(hx.size(0), self.input_channels, self.shape[0],
+                                    self.shape[1]).to(mps_device)
+                else:
+                    x = torch.zeros(hx.size(0), self.input_channels, self.shape[0],
+                                    self.shape[1]).cuda()
             else:
                 x = inputs[index, ...]
 
