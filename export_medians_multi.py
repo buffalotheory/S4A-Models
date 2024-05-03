@@ -66,7 +66,7 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
     num_bins, num_bands = medians.shape[:2]
 
     logging.info(f'median shape before sliding window: {medians.shape}, output_size: {output_size}')
-    medians = sliding_window_view(medians, [num_bins, num_bands, output_size[0], output_size[1]], [1, 1, output_size[0], output_size[1]]).squeeze(axis=(0,1))
+    medians2 = sliding_window_view(medians, [num_bins, num_bands, output_size[0], output_size[1]], [1, 1, output_size[0], output_size[1]]).squeeze(axis=(0,1))
     # shape: (subpatches_in_row, subpatches_in_col, bins, bands, height, width)
     logging.info(f'median shape after sliding window: {medians.shape}')
 
@@ -79,7 +79,7 @@ def process_patch(out_path, mode, num_buckets, root_coco_path, bands, padded_pat
         for j in range(medians2.shape[1]):
             print(f'  saving {num_bins} bins of information')
             for t in range(num_bins):
-                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians[i, j, t, :, :, :].astype(medians_dtype))
+                np.save(patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}', medians2[i, j, t, :, :, :].astype(medians_dtype))
             sub_idx += 1
 
     # Save labels
