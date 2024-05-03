@@ -451,6 +451,7 @@ def main():
                                  #checkpoint_callback=True,
                                  #resume_from_checkpoint=resume_from_checkpoint,
                                  fast_dev_run=args.devtest,
+                                 log_every_n_steps=10,
                                  #strategy='ddp'
                                  )
         else:
@@ -511,6 +512,7 @@ def main():
                                  max_epochs=2,
                                  precision=32,
                                  strategy='ddp' if args.num_gpus > 1 else None,
+                                 log_every_n_steps=10,
                                  )
         else:
             my_ddp = DDPPlugin(find_unused_parameters=True)
