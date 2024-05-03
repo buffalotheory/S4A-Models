@@ -265,6 +265,7 @@ class PADDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
+            persistent_workers=True,
             pin_memory=True
         )
 
@@ -274,6 +275,7 @@ class PADDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            persistent_workers=True,
             pin_memory=True
         )
 
@@ -283,5 +285,6 @@ class PADDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            persistent_workers=True,
             pin_memory=True
         )
