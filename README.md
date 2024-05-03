@@ -110,6 +110,8 @@ Every script inherits settings from the aforementioned files.
 3. Uncomment the precomputed class weights in the corresponding section of the configuration file depending on the scenario you are using (or compute your own).
 4. Especially for OAD, run `object-based-csv.py` to export the statistics needed for the experiments.
 
+NOTE: The original version of export_medians_multi.py has a serious bug when used with the default options.  The labels are exported 1-pixel-per-file, generating many GB of data on the filesystem and slowing the PC to a crawl.  In addition, the median data is exported with a shape of [366,1]
+
 **For PAD:**
 1. Run `pad_experiments.py` with the appropriate arguments. Example:
    ```
