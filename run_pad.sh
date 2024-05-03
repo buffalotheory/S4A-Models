@@ -9,9 +9,9 @@ time python pad_experiments.py \
       --parcel_loss \
       --weighted_loss \
       --root_path_coco coco_files/ \
-      --prefix_coco 20240417101117 \
-      --netcdf_path ../dataset/ \
-      --prefix 20240417101117 \
+      --prefix_coco 20240503132753 \
+      --netcdf_path ./dataset/ \
+      --prefix 20240503132753 \
       --num_epochs 10 \
       --batch_size 32 \
       --bands B02 B03 B04 B08 \
