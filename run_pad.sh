@@ -19,5 +19,4 @@ time python pad_experiments.py \
       --requires_norm \
       --num_workers 8 \
       --num_gpus 1 \
-      --fixed_window \
-      --saved_medians=True
+      --fixed_window
