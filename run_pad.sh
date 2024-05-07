@@ -12,8 +12,8 @@ time python pad_experiments.py \
       --prefix_coco 20240503153528 \
       --netcdf_path ./dataset/ \
       --prefix 20240503153528 \
-      --num_epochs 5 \
-      --batch_size 8 \
+      --num_epochs 3 \
+      --batch_size 4 \
       --bands B02 B03 B04 B08 \
       --img_size 61 61 \
       --requires_norm \
