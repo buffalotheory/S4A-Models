@@ -6,6 +6,7 @@ In order to be used as model inputs, the training data are further split into
 sequences using a rolling window of a fixed size.
 '''
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime
 
@@ -105,7 +106,11 @@ def create_model_log_path(log_path, prefix, model):
 
 
 def main():
-    # Parse user arguments
+
+    logging.basicConfig(format="[%(asctime)s]:%(levelname)s:%(funcName)20s:%(filename)s:%(lineno)4d:%(message)s", level=logging.INFO)
+    logging.info("Enter main.")
+
+     # Parse user arguments
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--train', action='store_true', default=False, required=False,
@@ -393,6 +398,7 @@ def main():
 
     if args.train:
         # Create Data Modules
+        logging.info("train: Create Data Modules")
         dm = PADDataModule(
             netcdf_path=netcdf_path,
             path_train=path_train,
@@ -436,6 +442,7 @@ def main():
         tb_logger = pl_loggers.TensorBoardLogger(run_path / 'tensorboard')
 
         if torch.backends.mps.is_available():
+            logging.info("Loading trainer")
             trainer = pl.Trainer(accelerator="mps",
                                  devices=1,
                                  num_nodes=args.num_nodes,
@@ -474,9 +481,12 @@ def main():
                                  )
 
         # Train model
+        logging.info("Calling fit()")
         trainer.fit(model, datamodule=dm)
+        logging.info("fit() complete")
     else:
         # Create Data Module
+        logging.info("test: Create Data Modules")
         dm = PADDataModule(
             netcdf_path=netcdf_path,
             path_test=path_test,
@@ -502,6 +512,7 @@ def main():
 
         # TRAINING
         # Setup to multi-GPUs
+        logging.info("test: calling test()")
         dm.setup('test')
 
         if torch.backends.mps.is_available():
@@ -526,7 +537,9 @@ def main():
                                  )
 
         # Test model
+        logging.info("test: calling eval()")
         model.eval()
+        logging.info("test: calling trainer.test()")
         trainer.test(model, datamodule=dm)
 
 
