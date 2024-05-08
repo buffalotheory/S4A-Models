@@ -13,3 +13,5 @@ models/__pycache__
 /venv/
 
 *.pkl
+
+/.archive/
