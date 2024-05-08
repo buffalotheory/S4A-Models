@@ -40,7 +40,7 @@ def print_model_stats(model):
     print(f'Total params: {pytorch_total_params}')
     print(f'Trainable params: {pytorch_train_params}')
     if torch.backends.mps.is_available():
-        print(f'Peak memory usage: TODO: port to MPS\n')
+        print(f'Peak memory usage: TODO: port to MPS.  Is there an equivalent to torch.cuda.max_memory_allocated()?\n')
     else:
         print(f'Peak memory usage: {(torch.cuda.max_memory_allocated() / (1024**2)):.2f} MB\n')
 
@@ -65,6 +65,7 @@ def get_last_model_checkpoint(path):
     (Path, Path, int): the path of the last model checkpoint file, the path of the
     last optimizer checkpoint file and the corresponding epoch.
     '''
+    logging.info(f'path: {path}')
     model_chkp = [c for c in Path(path).glob('model_state_dict_*')]
     optimizer_chkp = [c for c in Path(path).glob('optimizer_state_dict_*')]
     model_chkp_per_epoch = {int(c.name.split('.')[0].split('_')[-1]): c for c in model_chkp}
@@ -95,16 +96,19 @@ class CLSTM_cell(nn.Module):
                       4 * self.num_features, self.filter_size, 1,
                       self.padding),
             nn.GroupNorm(4 * self.num_features // 32, 4 * self.num_features))
+        if torch.backends.mps.is_available():
+            # Question: how to pass the optional mps device here without adding lots of arguments?
+            logging.info(f'setting mps device')
+            self.mps_device = torch.device("mps")
 
 
     def forward(self, inputs=None, hidden_state=None, seq_len=10):
         if hidden_state is None:
             if torch.backends.mps.is_available():
-                mps_device = torch.device("mps")
                 hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
-                                 self.shape[1]).to(mps_device)
+                                 self.shape[1]).to(self.mps_device)
                 cx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
-                                 self.shape[1]).to(mps_device)
+                                 self.shape[1]).to(self.mps_device)
             else:
                 hx = torch.zeros(inputs.size(1), self.num_features, self.shape[0],
                                  self.shape[1]).cuda()
@@ -116,9 +120,8 @@ class CLSTM_cell(nn.Module):
         for index in range(seq_len):
             if inputs is None:
                 if torch.backends.mps.is_available():
-                    mps_device = torch.device("mps")
                     x = torch.zeros(hx.size(0), self.input_channels, self.shape[0],
-                                    self.shape[1]).to(mps_device)
+                                    self.shape[1]).to(self.mps_device)
                 else:
                     x = torch.zeros(hx.size(0), self.input_channels, self.shape[0],
                                     self.shape[1]).cuda()
@@ -187,8 +190,9 @@ class ConvLSTM(pl.LightningModule):
 
         if class_weights is not None:
             if torch.backends.mps.is_available():
-                mps_device = torch.device("mps")
-                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())], device=mps_device)
+                logging.info(f'setting mps device')
+                self.mps_device = torch.device("mps")
+                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())], device=self.mps_device)
             else:
                 class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())]).cuda()
 

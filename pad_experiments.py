@@ -7,6 +7,7 @@ sequences using a rolling window of a fixed size.
 '''
 import argparse
 import logging
+import wandb
 from pathlib import Path
 from datetime import datetime
 
@@ -109,10 +110,10 @@ def main():
 
     log_format=':'.join([
         '[%(asctime)s]',
-        '%(levelname)s'
-        '%(funcName)20s'
-        '%(filename)s'
-        '%(lineno)4d'
+        '%(levelname)s',
+        '%(funcName)s',
+        '%(filename)s',
+        '%(lineno)d',
         '%(message)s'
     ])
     logging.basicConfig(format=log_format, level=logging.INFO)
@@ -283,7 +284,7 @@ def main():
             # start a new wandb run to track this script
             wandb.init(
                 # set the wandb project where this run will be logged
-                project="S4A: ConvLSTM",
+                project="S4A ConvLSTM",
                 # track hyperparameters and run metadata
                 config={
                     "learning_rate": init_learning_rate,
@@ -422,7 +423,7 @@ def main():
 
     if args.train:
         # Create Data Modules
-        logging.info("train: Create Data Modules")
+        logging.info(f"train: Create Data Modules: batch size: {args.batch_size}")
         dm = PADDataModule(
             netcdf_path=netcdf_path,
             path_train=path_train,

@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import time
 import torch
@@ -260,6 +261,7 @@ class PADDataModule(pl.LightningDataModule):
             )
 
     def train_dataloader(self):
+        logging.info(f'batch size: {self.batch_size}')
         return DataLoader(
             self.dataset_train,
             batch_size=self.batch_size,
