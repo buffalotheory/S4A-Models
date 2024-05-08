@@ -197,6 +197,8 @@ def main():
                              help='Number of gpus to use (per node). Default 1')
     parser.add_argument('--num_nodes', type=int, default=1, required=False,
                              help='Number of nodes to use. Default 1')
+    parser.add_argument('--wandb', action='store_true', default=False, required=False,
+                             help='Whether to enable wandb for online monitoring')
 
     args = parser.parse_args()
 
@@ -275,12 +277,12 @@ def main():
                         init_learning_rate = float(epoch_lr[1])
 
             model = ConvLSTM(run_path, LINEAR_ENCODER, learning_rate=init_learning_rate,
-                             parcel_loss=args.parcel_loss, class_weights=class_weights)
+                             parcel_loss=args.parcel_loss, class_weights=class_weights, wandb=args.wandb)
         else:
             model = ConvLSTM(run_path, LINEAR_ENCODER, parcel_loss=args.parcel_loss,
-                             class_weights=class_weights)
+                             class_weights=class_weights, wandb=args.wandb)
 
-        if args.train:
+        if args.train and args.wandb:
             # start a new wandb run to track this script
             wandb.init(
                 # set the wandb project where this run will be logged
@@ -509,7 +511,8 @@ def main():
         logging.info("Calling fit()")
         trainer.fit(model, datamodule=dm)
         logging.info("fit() complete")
-        wandb.finish()
+        if args.train and args.wandb:
+            wandb.finish()
 
     else:
         # Create Data Module

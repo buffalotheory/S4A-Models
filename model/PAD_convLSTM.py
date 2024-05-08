@@ -147,7 +147,7 @@ class CLSTM_cell(nn.Module):
 
 class ConvLSTM(pl.LightningModule):
     def __init__(self, run_path, linear_encoder, learning_rate=1e-3, parcel_loss=False,
-                 class_weights=None, crop_encoding=None, checkpoint_epoch=None):
+                 class_weights=None, crop_encoding=None, checkpoint_epoch=None, wandb=False):
         '''
         Parameters:
         -----------
@@ -173,6 +173,7 @@ class ConvLSTM(pl.LightningModule):
         '''
         super(ConvLSTM, self).__init__()
 
+        self.wandb = wandb
         self.linear_encoder = linear_encoder
         self.parcel_loss = parcel_loss
 
@@ -381,7 +382,8 @@ class ConvLSTM(pl.LightningModule):
         loss_aver = loss.item() * inputs.shape[0]
 
         self.epoch_train_losses.append(loss_aver)
-        wandb.log({"loss": loss_aver})
+        if self.wandb:
+            wandb.log({"loss": loss_aver})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
 
