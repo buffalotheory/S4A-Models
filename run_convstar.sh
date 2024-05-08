@@ -3,6 +3,8 @@
 
 set -x
 
+echo "[$(date +%Y-%m-%d %H:%M:%S)]:INFO:${0}:starting pad_experiments.py" >&2
+
 time python pad_experiments.py \
       --train \
       --model convstar \
