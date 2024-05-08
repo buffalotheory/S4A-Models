@@ -3,9 +3,12 @@
 
 set -x
 
+MODEL=convlstm
+echo "[$(date +%Y-%m-%d %H:%M:%S)]:INFO:${0}:starting pad_experiments.py with model $MODEL" >&2
+
 time python pad_experiments.py \
       --train \
-      --model convlstm \
+      --model $MODEL \
       --parcel_loss \
       --weighted_loss \
       --root_path_coco coco_files/ \
