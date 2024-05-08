@@ -9,6 +9,9 @@ https://github.com/jhhuang96/ConvLSTM-PyTorch.git
 
 import os
 
+import logging
+import wandb
+
 import numpy as np
 from tqdm import tqdm
 import copy
@@ -335,6 +338,7 @@ class ConvLSTM(pl.LightningModule):
 
 
     def training_step(self, batch, batch_idx):
+        logging.info(f"traning step: batch_idx: {batch_idx}")
         inputs = batch['medians']  # (B, T, C, H, W)
 
         label = batch['labels']  # (B, H, W)
@@ -373,6 +377,7 @@ class ConvLSTM(pl.LightningModule):
         loss_aver = loss.item() * inputs.shape[0]
 
         self.epoch_train_losses.append(loss_aver)
+        wandb.log({"loss": loss_aver})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
 

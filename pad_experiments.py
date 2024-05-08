@@ -107,8 +107,16 @@ def create_model_log_path(log_path, prefix, model):
 
 def main():
 
-    logging.basicConfig(format="[%(asctime)s]:%(levelname)s:%(funcName)20s:%(filename)s:%(lineno)4d:%(message)s", level=logging.INFO)
-    logging.info("Enter main.")
+    log_format=':'.join([
+        '[%(asctime)s]',
+        '%(levelname)s'
+        '%(funcName)20s'
+        '%(filename)s'
+        '%(lineno)4d'
+        '%(message)s'
+    ])
+    logging.basicConfig(format=log_format, level=logging.INFO)
+    logging.info(f"Enter main.  log format: {log_format}")
 
      # Parse user arguments
     parser = argparse.ArgumentParser()
@@ -255,6 +263,8 @@ def main():
                 LearningRateMonitor(logging_interval='step')
             ]
 
+        # Dummy value for wandb
+        init_learning_rate = 0.2
         if args.resume is not None:
             # Restore optimizer's learning rate
             with open(run_path / 'lrs.txt', 'r') as f:
@@ -268,6 +278,20 @@ def main():
         else:
             model = ConvLSTM(run_path, LINEAR_ENCODER, parcel_loss=args.parcel_loss,
                              class_weights=class_weights)
+
+        if args.train:
+            # start a new wandb run to track this script
+            wandb.init(
+                # set the wandb project where this run will be logged
+                project="S4A: ConvLSTM",
+                # track hyperparameters and run metadata
+                config={
+                    "learning_rate": init_learning_rate,
+                    "architecture": "ConvLSTM",
+                    "dataset": "Sen4AgriNet",
+                    "epochs": max_epoch,
+                }
+            )
 
         if not args.train:
             # Load the model for testing
@@ -484,6 +508,8 @@ def main():
         logging.info("Calling fit()")
         trainer.fit(model, datamodule=dm)
         logging.info("fit() complete")
+        wandb.finish()
+
     else:
         # Create Data Module
         logging.info("test: Create Data Modules")
