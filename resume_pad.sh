@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 # from
 
 set -x
@@ -19,4 +19,10 @@ time python pad_experiments.py \
       --requires_norm \
       --num_workers 8 \
       --num_gpus 1 \
-      --fixed_window
+      --fixed_window \
+      --resume ./logs/convlstm/20240503153528/run_20240507204539/checkpoints/epoch=0-step=189.ckpt
+
+
+# Seems to be test-only:
+#    load_checkpoint: Path or str
+#        The checkpoint to load (if needed).
