@@ -452,8 +452,6 @@ def main():
             return_parcels=args.parcel_loss
         )
 
-        import pdb
-        pdb.set_trace()
         logging.debug(f'calling fit.  dir(dm): {dir(dm)}')
         # TRAINING
         # Setup to multi-GPUs

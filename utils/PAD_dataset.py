@@ -204,7 +204,23 @@ class PADDataset(Dataset):
             self.padded_patch_width += (self.pad_left + self.pad_right)
 
         self.num_subpatches = (self.padded_patch_height // self.output_size[0]) * (self.padded_patch_width // self.output_size[1])
-        logging.debug(f'num_subpatches: {self.num_subpatches}')
+        logging.debug(f'num_subpatches({self.num_subpatches}) = padded_patch_height({self.padded_patch_height}) / output_size[0]({self.output_size[0]}) * padded_patch_width({self.padded_patch_width}) / output_size[1]({self.output_size[1]})')
+        nmonths = len(
+            pd.date_range(
+                start=f'2020-01-01', end=f'2021-01-01', freq=group_freq
+            )
+        ) - 1
+        logging.debug(f'num_patches: {self.num_patches}, num_subpatches: {self.num_subpatches}, self.padded_patch_height: {self.padded_patch_height}, self.padded_patch_width: {self.padded_patch_width}, self.output_size: {self.output_size}, nmonths: {nmonths}, window_len: {window_len}')
+        len_pad_dataset = int(
+            self.num_patches * self.num_subpatches
+        ) * (
+            len(
+                pd.date_range(
+                    start=f'2020-01-01', end=f'2021-01-01', freq=group_freq
+                )
+            ) - 1 - window_len + 1
+        )
+        logging.debug(f'num_patches({self.num_patches}) * num_subpatches({self.num_subpatches}) * (nmonths({nmonths}) - window_len({window_len}) + 1) = {len_pad_dataset}')
 
         self.requires_norm = requires_norm
 

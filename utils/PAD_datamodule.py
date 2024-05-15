@@ -1,3 +1,4 @@
+import pdb
 import logging
 import numpy as np
 import time
@@ -209,6 +210,33 @@ class PADDataModule(pl.LightningDataModule):
                 mode='train',
                 return_parcels=self.return_parcels
             )
+            #(Pdb) import os
+            #(Pdb) os.getcwd()
+            #'/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models'
+
+            #(Pdb) print(self.netcdf_path)
+            #dataset
+            # NOTE: This path contains 6 patch files under the 'netcdf' folder
+
+            #(Pdb) str(self.path_train)
+            #'coco_files/20240503153528_coco_train.json'
+            # NOTE: this json file contains 3 patch files
+
+            #(Pdb) coco_train.getImgIds()
+            #[5, 6, 2]
+            # NOTE: the meaning of 5, 6, and 2 are currently unclear
+
+            #(Pdb) len(coco_train.dataset)
+            #4
+
+            #(Pdb) len(coco_train.imgs)
+            #3
+
+            #(Pdb) len(self.dataset_train)
+            #756
+            # WHERE IN THE HELL DID THIS COME FROM???
+
+            logging.debug(f'PADDataset loaded: len(self.dataset_train): {len(self.dataset_train)}')
 
             self.dataset_eval = PADDataset(
                 root_path_netcdf=self.netcdf_path,
@@ -259,9 +287,11 @@ class PADDataModule(pl.LightningDataModule):
                 mode='test',
                 return_parcels=self.return_parcels
             )
+        #pdb.set_trace()
 
     def train_dataloader(self):
-        logging.info(f'batch size: {self.batch_size}')
+        logging.info(f'batch size: {self.batch_size}, len(self.dataset_train): {len(self.dataset_train)}')
+        #pdb.set_trace()
         return DataLoader(
             self.dataset_train,
             batch_size=self.batch_size,
