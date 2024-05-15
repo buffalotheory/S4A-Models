@@ -171,6 +171,13 @@ class ConvLSTM(pl.LightningModule):
         checkpoint_epoch: int, default None
             The epoch loaded for testing.
         '''
+        self.overfit_batches = 4
+        self.limit_train_batches = 4
+        self.limit_val_batches = 2
+        self.limit_test_batches = 2
+        self.max_batches = 4
+        self.log_every_n_steps = 4
+
         super(ConvLSTM, self).__init__()
 
         self.wandb = wandb
