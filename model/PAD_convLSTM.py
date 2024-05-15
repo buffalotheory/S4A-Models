@@ -65,7 +65,7 @@ def get_last_model_checkpoint(path):
     (Path, Path, int): the path of the last model checkpoint file, the path of the
     last optimizer checkpoint file and the corresponding epoch.
     '''
-    logging.info(f'path: {path}')
+    logging.debug(f'path: {path}')
     model_chkp = [c for c in Path(path).glob('model_state_dict_*')]
     optimizer_chkp = [c for c in Path(path).glob('optimizer_state_dict_*')]
     model_chkp_per_epoch = {int(c.name.split('.')[0].split('_')[-1]): c for c in model_chkp}
@@ -98,7 +98,7 @@ class CLSTM_cell(nn.Module):
             nn.GroupNorm(4 * self.num_features // 32, 4 * self.num_features))
         if torch.backends.mps.is_available():
             # Question: how to pass the optional mps device here without adding lots of arguments?
-            logging.info(f'setting mps device')
+            logging.debug(f'setting mps device')
             self.mps_device = torch.device("mps")
 
 
@@ -191,7 +191,7 @@ class ConvLSTM(pl.LightningModule):
 
         if class_weights is not None:
             if torch.backends.mps.is_available():
-                logging.info(f'setting mps device')
+                logging.debug(f'setting mps device')
                 self.mps_device = torch.device("mps")
                 class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())], device=self.mps_device)
             else:
@@ -339,11 +339,15 @@ class ConvLSTM(pl.LightningModule):
                                                         verbose=True),
             'monitor': 'val_loss'
         }
+        #num_batches = len(self.train_dataloader()) / self.trainer.accumulate_grad_batches
+        #logging.debug(f'self.trainer.accumulate_grad_batches: {self.trainer.accumulate_grad_batches}')
+        logging.debug(f"self.trainer.num_training_batches: {self.trainer.num_training_batches}")
         return [optimizer], [pla_lr_scheduler]
 
 
     def training_step(self, batch, batch_idx):
-        logging.info(f"traning step: batch_idx: {batch_idx}")
+        #logging.debug(f"traning step: batch_idx: {batch_idx}, batch keys: {batch.keys()}, self.trainer.num_training_batches: {trainer.num_training_batches}")
+        logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}")
         inputs = batch['medians']  # (B, T, C, H, W)
 
         label = batch['labels']  # (B, H, W)

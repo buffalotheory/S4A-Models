@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -139,6 +140,7 @@ class PADDataset(Dataset):
 
         # number of total patches is given by number of patches in coco
         self.num_patches = len(self.patch_ids)
+        logging.debug(f"number of patches: {len(self.patch_ids)}")
 
         self.patch_width, self.patch_height = IMG_SIZE, IMG_SIZE
         self.padded_patch_width, self.padded_patch_height = IMG_SIZE, IMG_SIZE
@@ -202,6 +204,7 @@ class PADDataset(Dataset):
             self.padded_patch_width += (self.pad_left + self.pad_right)
 
         self.num_subpatches = (self.padded_patch_height // self.output_size[0]) * (self.padded_patch_width // self.output_size[1])
+        logging.debug(f'num_subpatches: {self.num_subpatches}')
 
         self.requires_norm = requires_norm
 
@@ -221,6 +224,7 @@ class PADDataset(Dataset):
 
         self.saved_medians = saved_medians
         self.medians_dir = Path(f'logs/medians/{prefix}_medians_{group_freq}_{"".join(self.bands)}/{mode}')
+        logging.debug(f'self.medians_dir: {self.medians_dir}')
 
 
     def get_padding_offset(self):
@@ -421,6 +425,7 @@ class PADDataset(Dataset):
 
         patch_id = self.patch_ids[patch_id]
 
+        logging.debug(f'saved medians: {self.saved_medians}')
         if self.saved_medians:
             # They are already computed, therefore we just load them
             block_dir = Path(self.medians_dir) / str(patch_id)
@@ -522,6 +527,7 @@ class PADDataset(Dataset):
                                           requires_norm=self.requires_norm,
                                           reference_bands=self.bands)
 
+        logging.debug(f'returning medians')
         return out
 
 

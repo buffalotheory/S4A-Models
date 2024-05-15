@@ -116,7 +116,7 @@ def main():
         '%(lineno)d',
         '%(message)s'
     ])
-    logging.basicConfig(format=log_format, level=logging.INFO)
+    logging.basicConfig(format=log_format, level=logging.DEBUG)
     logging.info(f"Enter main.  log format: {log_format}")
 
      # Parse user arguments
@@ -277,10 +277,12 @@ def main():
                         init_learning_rate = float(epoch_lr[1])
 
             model = ConvLSTM(run_path, LINEAR_ENCODER, learning_rate=init_learning_rate,
-                             parcel_loss=args.parcel_loss, class_weights=class_weights, wandb=args.wandb)
+                             parcel_loss=args.parcel_loss, class_weights=class_weights,
+                             wandb=args.wandb)
         else:
             model = ConvLSTM(run_path, LINEAR_ENCODER, parcel_loss=args.parcel_loss,
-                             class_weights=class_weights, wandb=args.wandb)
+                             class_weights=class_weights,
+                             wandb=args.wandb)
 
         if args.train and args.wandb:
             # start a new wandb run to track this script
@@ -425,7 +427,7 @@ def main():
 
     if args.train:
         # Create Data Modules
-        logging.info(f"train: Create Data Modules: batch size: {args.batch_size}")
+        logging.debug(f"train: Create Data Modules: batch size: {args.batch_size}")
         dm = PADDataModule(
             netcdf_path=netcdf_path,
             path_train=path_train,
@@ -450,9 +452,13 @@ def main():
             return_parcels=args.parcel_loss
         )
 
+        import pdb
+        pdb.set_trace()
+        logging.debug(f'calling fit.  dir(dm): {dir(dm)}')
         # TRAINING
         # Setup to multi-GPUs
         dm.setup('fit')
+        logging.debug(f'returned from fit.  dir(dm): {dir(dm)}')
 
         # DEFAULT CALLBACKS used by the Trainer
         # early_stopping = EarlyStopping('val_loss')
@@ -469,7 +475,7 @@ def main():
         tb_logger = pl_loggers.TensorBoardLogger(run_path / 'tensorboard')
 
         if torch.backends.mps.is_available():
-            logging.info("Loading trainer")
+            logging.debug("Loading trainer")
             trainer = pl.Trainer(accelerator="mps",
                                  devices=1,
                                  num_nodes=args.num_nodes,
@@ -488,6 +494,7 @@ def main():
                                  log_every_n_steps=10,
                                  #strategy='ddp'
                                  )
+            logging.debug(f"trainer loaded; trainer.num_training_batches: {trainer.num_training_batches}")
         else:
             my_ddp = DDPPlugin(find_unused_parameters=True)
             trainer = pl.Trainer(gpus=args.num_gpus,
@@ -508,15 +515,15 @@ def main():
                                  )
 
         # Train model
-        logging.info("Calling fit()")
+        logging.debug("Calling fit()")
         trainer.fit(model, datamodule=dm)
-        logging.info("fit() complete")
+        logging.debug("fit() complete")
         if args.train and args.wandb:
             wandb.finish()
 
     else:
         # Create Data Module
-        logging.info("test: Create Data Modules")
+        logging.debug("test: Create Data Modules")
         dm = PADDataModule(
             netcdf_path=netcdf_path,
             path_test=path_test,
@@ -542,7 +549,7 @@ def main():
 
         # TRAINING
         # Setup to multi-GPUs
-        logging.info("test: calling test()")
+        logging.debug("test: calling test()")
         dm.setup('test')
 
         if torch.backends.mps.is_available():
@@ -567,9 +574,9 @@ def main():
                                  )
 
         # Test model
-        logging.info("test: calling eval()")
+        logging.debug("test: calling eval()")
         model.eval()
-        logging.info("test: calling trainer.test()")
+        logging.debug("test: calling trainer.test()")
         trainer.test(model, datamodule=dm)
 
 
