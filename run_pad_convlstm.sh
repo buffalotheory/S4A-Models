@@ -12,9 +12,9 @@ time python pad_experiments.py \
       --parcel_loss \
       --weighted_loss \
       --root_path_coco coco_files/ \
-      --prefix_coco 20240503153528 \
+      --prefix_coco 202405161500 \
       --netcdf_path ./dataset/ \
-      --prefix 20240503153528 \
+      --prefix 20240516144730 \
       --num_epochs 3 \
       --batch_size 4 \
       --bands B02 B03 B04 B08 \
@@ -23,3 +23,6 @@ time python pad_experiments.py \
       --num_workers 8 \
       --num_gpus 1 \
       --fixed_window
+
+      # \
+      #--saved_medians
