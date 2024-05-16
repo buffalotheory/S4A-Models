@@ -20,9 +20,12 @@ time python pad_experiments.py \
       --bands B02 B03 B04 B08 \
       --img_size 61 61 \
       --requires_norm \
-      --num_workers 8 \
+      --num_workers 9 \
       --num_gpus 1 \
-      --fixed_window
+      --window_len 12
+
+#      --bands B02 B03 B04 B08 \
+      #--fixed_window
 
       # \
       #--saved_medians
