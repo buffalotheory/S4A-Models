@@ -2,6 +2,7 @@
 # Code taken from:
 #   https://github.com/0zgur0/ms-convSTAR
 
+import logging
 from pathlib import Path
 import pickle
 import numpy as np
@@ -36,6 +37,8 @@ class ConvSTARCell(nn.Module):
         init.constant(self.update.bias, 0.)
         init.constant(self.gate.bias, 1.)
 
+        self.mps_device = None
+
         print('convSTAR cell is constructed with h_dim: ', hidden_size)
 
     def forward(self, input_, prev_state):
@@ -49,6 +52,11 @@ class ConvSTARCell(nn.Module):
             state_size = [batch_size, self.hidden_size] + list(spatial_size)
             if torch.cuda.is_available():
                 prev_state = torch.zeros(state_size).cuda()
+            elif torch.backends.mps.is_available():
+                #logging.debug(f'setting mps device')
+                #if self.mps_device is None:
+                #    self.mps_device = torch.device("mps")
+                prev_state = torch.zeros(state_size).to('mps')
             else:
                 prev_state = torch.zeros(state_size)
 
@@ -103,6 +111,8 @@ class ConvSTAR(pl.LightningModule):
 
         super(ConvSTAR, self).__init__()
 
+        self.mps_device = None
+
         self.linear_encoder = linear_encoder
         self.parcel_loss = parcel_loss
 
@@ -119,8 +129,13 @@ class ConvSTAR(pl.LightningModule):
         self.checkpoint_epoch = checkpoint_epoch
 
         if class_weights is not None:
-            class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())]).cuda()
-
+            if torch.backends.mps.is_available():
+                logging.debug(f'setting mps device')
+                if self.mps_device is None:
+                    self.mps_device = torch.device("mps")
+                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())], device=self.mps_device)
+            else:
+                class_weights_tensor = torch.tensor([class_weights[k] for k in sorted(class_weights.keys())]).cuda()
             if self.parcel_loss:
                 self.lossfunction = nn.NLLLoss(ignore_index=0, weight=class_weights_tensor, reduction='sum')
             else:
@@ -356,7 +371,7 @@ class ConvSTAR(pl.LightningModule):
         return
 
 
-    def training_epoch_end(self, outputs):
+    def on_train_epoch_end(self):
         # Calculate average loss over an epoch
         train_loss = np.nanmean(self.epoch_train_losses)
         self.avg_train_losses.append(train_loss)
@@ -373,7 +388,7 @@ class ConvSTAR(pl.LightningModule):
         self.epoch_train_losses = []
 
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         # Calculate average loss over an epoch
         valid_loss = np.nanmean(self.epoch_valid_losses)
         self.avg_val_losses.append(valid_loss)
