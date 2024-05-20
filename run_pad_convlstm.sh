@@ -15,7 +15,7 @@ time python pad_experiments.py \
       --prefix_coco 202405161500 \
       --netcdf_path ./dataset/ \
       --prefix $(date "+%Y%m%d") \
-      --num_epochs 4 \
+      --num_epochs 10 \
       --batch_size 9 \
       --bands B02 B03 B04 B08 \
       --img_size 61 61 \

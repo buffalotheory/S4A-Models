@@ -586,7 +586,7 @@ class PADDataset(Dataset):
                                     constant_values=0
                                     )
 
-                print(f'medians requires_subpatching: {self.requires_subpatching}, medians shape: {medians.shape}, subpatch_id: {subpatch_id}')
+                #print(f'medians requires_subpatching: {self.requires_subpatching}, medians shape: {medians.shape}, subpatch_id: {subpatch_id}')
                 if self.requires_subpatching:
                     window_len, num_bands, width, height = medians.shape
 
@@ -604,7 +604,7 @@ class PADDataset(Dataset):
                     medians = medians.reshape(window_len, num_bands, num_subpatches_w, side_w, num_subpatches_h, side_h) \
                         .transpose(2, 4, 0, 1, 3, 5) \
                         .reshape(-1, window_len, num_bands, side_w, side_h)
-                    print(f'subpatch medians shape: {medians.shape}; subpatch_id: {subpatch_id}')
+                    #print(f'subpatch medians shape: {medians.shape}; subpatch_id: {subpatch_id}')
 
                     # Same for labels, but no bands and window length dimensions
                     labels = labels.reshape(num_subpatches_w, side_w, num_subpatches_h, side_h)\

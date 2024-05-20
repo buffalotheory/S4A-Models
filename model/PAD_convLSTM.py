@@ -349,7 +349,7 @@ class ConvLSTM(pl.LightningModule):
         #num_batches = len(self.train_dataloader()) / self.trainer.accumulate_grad_batches
         #logging.debug(f'self.trainer.accumulate_grad_batches: {self.trainer.accumulate_grad_batches}')
         logging.debug(f"self.trainer.num_training_batches: {self.trainer.num_training_batches}")
-        self.scheduler = pla_lr_scheduler
+        self.scheduler = pla_lr_scheduler['scheduler']
         return [optimizer], [pla_lr_scheduler]
 
 
@@ -398,7 +398,7 @@ class ConvLSTM(pl.LightningModule):
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
-        logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
+        #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
 
         return {'loss': loss}
 
