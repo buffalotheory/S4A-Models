@@ -280,6 +280,7 @@ class ConvLSTM(pl.LightningModule):
         # Hyperparameters
         self.learning_rate = learning_rate
         self.save_hyperparameters()
+        self.scheduler = None
 
 
     def forward(self, input):
@@ -342,19 +343,18 @@ class ConvLSTM(pl.LightningModule):
         pla_lr_scheduler = {
             'scheduler': lr_scheduler.ReduceLROnPlateau(optimizer,
                                                         factor=0.5,
-                                                        patience=4,
-                                                        verbose=True),
+                                                        patience=4),
             'monitor': 'val_loss'
         }
         #num_batches = len(self.train_dataloader()) / self.trainer.accumulate_grad_batches
         #logging.debug(f'self.trainer.accumulate_grad_batches: {self.trainer.accumulate_grad_batches}')
         logging.debug(f"self.trainer.num_training_batches: {self.trainer.num_training_batches}")
+        self.scheduler = pla_lr_scheduler
         return [optimizer], [pla_lr_scheduler]
 
 
     def training_step(self, batch, batch_idx):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, batch keys: {batch.keys()}, self.trainer.num_training_batches: {trainer.num_training_batches}")
-        logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}")
         inputs = batch['medians']  # (B, T, C, H, W)
 
         label = batch['labels']  # (B, H, W)
@@ -397,6 +397,8 @@ class ConvLSTM(pl.LightningModule):
             wandb.log({"loss": loss_aver})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
+        #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
+        logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
 
         return {'loss': loss}
 
@@ -514,6 +516,7 @@ class ConvLSTM(pl.LightningModule):
 
 
     def test_epoch_end(self):
+        logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
 
         self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label

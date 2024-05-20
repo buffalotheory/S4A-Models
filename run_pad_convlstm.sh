@@ -14,18 +14,22 @@ time python pad_experiments.py \
       --root_path_coco coco_files/ \
       --prefix_coco 202405161500 \
       --netcdf_path ./dataset/ \
-      --prefix 20240516144730 \
-      --num_epochs 3 \
-      --batch_size 4 \
+      --prefix $(date "+%Y%m%d_%H%M%S") \
+      --num_epochs 10 \
+      --batch_size 2 \
       --bands B02 B03 B04 B08 \
       --img_size 61 61 \
       --requires_norm \
       --num_workers 9 \
       --num_gpus 1 \
-      --window_len 12
+      --fixed_window \
 
-#      --bands B02 B03 B04 B08 \
-      #--fixed_window
+#      --wandb \
+#      --saved_medians \
+
+
+      #--window_len 12
+
 
       # \
       #--saved_medians

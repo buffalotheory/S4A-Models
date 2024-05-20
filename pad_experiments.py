@@ -452,11 +452,11 @@ def main():
             return_parcels=args.parcel_loss
         )
 
-        logging.debug(f'calling fit.  dir(dm): {dir(dm)}')
+        logging.debug(f'calling fit.')
         # TRAINING
         # Setup to multi-GPUs
         dm.setup('fit')
-        logging.debug(f'returned from fit.  dir(dm): {dir(dm)}')
+        logging.debug(f'returned from fit.')
 
         # DEFAULT CALLBACKS used by the Trainer
         # early_stopping = EarlyStopping('val_loss')
