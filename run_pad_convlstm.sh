@@ -14,9 +14,9 @@ time python pad_experiments.py \
       --root_path_coco coco_files/ \
       --prefix_coco 202405161500 \
       --netcdf_path ./dataset/ \
-      --prefix $(date "+%Y%m%d_%H%M%S") \
-      --num_epochs 10 \
-      --batch_size 2 \
+      --prefix $(date "+%Y%m%d") \
+      --num_epochs 4 \
+      --batch_size 9 \
       --bands B02 B03 B04 B08 \
       --img_size 61 61 \
       --requires_norm \
@@ -24,6 +24,7 @@ time python pad_experiments.py \
       --num_gpus 1 \
       --fixed_window \
 
+#      --prefix $(date "+%Y%m%d_%H%M%S") \
 #      --wandb \
 #      --saved_medians \
 
