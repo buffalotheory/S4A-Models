@@ -512,11 +512,11 @@ class PADDataset(Dataset):
     def get_subpatch_medians(self, block_dir, subpatch_id):
         medians_file = block_dir / f'medians_{str(subpatch_id).rjust(2, "0")}.npy'
         if not medians_file.is_file():
-            print(f'{medians_file} does not exist')
+            #print(f'{medians_file} does not exist')
             return None, None
         labels_file = block_dir / f'labels_{str(subpatch_id).rjust(2, "0")}.npy'
         if not labels_file.is_file():
-            print(f'{labels_file} does not exist')
+            #print(f'{labels_file} does not exist')
             return None, None
         medians = np.load(medians_file)
         labels = np.load(labels_file)
@@ -545,7 +545,7 @@ class PADDataset(Dataset):
         # Logging is disabled in __getitem__
         #logging.info(f'idx {idx}, medians_dir: {self.medians_dir}')
         start_bin, patch_id, subpatch_id = self.get_window(idx)
-        print(f'PAD_dataset:__getitem__: {idx} of {len(self)}, medians_dir: {self.medians_dir}, start_bin: {start_bin}, patch_id: {patch_id}, self.patch_id: {self.patch_ids[patch_id]}, subpatch_id: {subpatch_id}')
+        #print(f'PAD_dataset:__getitem__: {idx} of {len(self)}, medians_dir: {self.medians_dir}, start_bin: {start_bin}, patch_id: {patch_id}, self.patch_id: {self.patch_ids[patch_id]}, subpatch_id: {subpatch_id}')
 
         patch_id = self.patch_ids[patch_id]
 
@@ -558,9 +558,7 @@ class PADDataset(Dataset):
         else:
 
             medians, labels = self.get_subpatch_medians(block_dir, subpatch_id)
-            if not medians is None:
-                print(f'fetched medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
-            else:
+            if medians is None:
                 # Find patch in COCO file
                 patch = self.root_path_netcdf / self.coco.loadImgs(patch_id)[0]['file_name']
 
@@ -621,7 +619,7 @@ class PADDataset(Dataset):
                     # Return requested sub-patch
                     medians = medians[subpatch_id]
                     labels = labels[subpatch_id]
-                print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
+                #print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
 
         # Normalize data to range [0-1]
         if self.requires_norm:
@@ -664,7 +662,7 @@ class PADDataset(Dataset):
                                           requires_norm=self.requires_norm,
                                           reference_bands=self.bands)
 
-        print(f'returning idx {idx}: medians shape: {out["medians"].shape}, labels shape: {out["labels"].shape}, parcels shape: {out["parcels"].shape}')
+        #print(f'returning idx {idx}: medians shape: {out["medians"].shape}, labels shape: {out["labels"].shape}, parcels shape: {out["parcels"].shape}')
         return out
 
 
