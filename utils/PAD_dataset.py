@@ -238,6 +238,7 @@ class PADDataset(Dataset):
         # We index based on year, number of bins should be the same for every year
         # therefore, calculate them using a random year
         self.num_buckets = len(pd.date_range(start=f'2020-01-01', end=f'2021-01-01', freq=self.group_freq)) - 1
+        logging.debug(f'self.num_buckets: {self.num_buckets}')
 
         self.saved_medians = saved_medians
         self.medians_dir = Path(f'logs/medians/{prefix}_medians_{group_freq}_{"".join(self.bands)}/{mode}')
@@ -362,14 +363,15 @@ class PADDataset(Dataset):
         return labels
 
 
-    def save_medians(self, patch_dir, medians, labels):
+    def save_medians(self, patch_dir, idx, maxidx, medians, labels):
         #logging.debug(f'save medians to {patch_dir}; medians shape: {medians.shape}')
         num_bins = medians.shape[0]
         num_bands = medians.shape[1]
-        bins_pad = len(str(medians.shape[-4]))
-        subs_pad = len(str(medians.shape[0] * medians.shape[1]))
+
+        bins_pad = len(str(num_bins))
+        subs_pad = len(str(num_bins * num_bands))
         sub_idx = 0
-        print(f'Saving medians; shape: {medians.shape}, num_bins: {num_bins}, num_bands: {num_bands}, bins_pad: {bins_pad}, sub_pad: {subs_pad}')
+        print(f'Saving medians; shape: {medians.shape}, num_bins: {num_bins}, num_bands: {num_bands}')
         for binidx in range(num_bins):
             for bandidx in range(num_bands):
                 #logging.info(f'  saving {num_bins} bins of information')
@@ -507,6 +509,32 @@ class PADDataset(Dataset):
 
         return int(start_bin), int(patch_id), int(subpatch_id)
 
+    def get_subpatch_medians(self, block_dir, subpatch_id):
+        medians_file = block_dir / f'medians_{str(subpatch_id).rjust(2, "0")}.npy'
+        if not medians_file.is_file():
+            print(f'{medians_file} does not exist')
+            return None, None
+        labels_file = block_dir / f'labels_{str(subpatch_id).rjust(2, "0")}.npy'
+        if not labels_file.is_file():
+            print(f'{labels_file} does not exist')
+            return None, None
+        medians = np.load(medians_file)
+        labels = np.load(labels_file)
+        return medians, labels
+
+    def save_subpatch_medians(self, block_dir, medians, labels):
+        print(f'saving {medians.shape[0]} subpatches to files in {block_dir}.  labels shape: {labels.shape}')
+        if not block_dir.is_dir():
+            logging.debug(f'Creating block_dir: {block_dir}')
+            block_dir.mkdir(parents=True)
+        for subpatch_id in range(medians.shape[0]):
+            medians_file = block_dir / f'medians_{str(subpatch_id).rjust(2, "0")}.npy'
+            if not medians_file.is_file():
+                np.save(medians_file, medians[subpatch_id])
+            labels_file = block_dir / f'labels_{str(subpatch_id).rjust(2, "0")}.npy'
+            if not labels_file.is_file():
+                np.save(labels_file, labels[subpatch_id])
+
     def __getitem__(self, idx: int) -> dict:
         # The data item index (`idx`) corresponds to a single sequence.
         # In order to fetch the correct sequence, we must determine exactly which
@@ -528,66 +556,72 @@ class PADDataset(Dataset):
             # Read medians in time window
             medians, labels = self.load_medians(block_dir, subpatch_id, start_bin)
         else:
-            # Find patch in COCO file
-            patch = self.root_path_netcdf / self.coco.loadImgs(patch_id)[0]['file_name']
 
-            # Load patch netcdf4
-            patch_netcdf = netCDF4.Dataset(patch, 'r')
+            medians, labels = self.get_subpatch_medians(block_dir, subpatch_id)
+            if not medians is None:
+                print(f'fetched medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
+            else:
+                # Find patch in COCO file
+                patch = self.root_path_netcdf / self.coco.loadImgs(patch_id)[0]['file_name']
 
-            # Compute on the fly each time, adds overhead for small output_size!!!
-            # medians is a 4d numpy array (window length, bands, img_size, img_size)
-            medians = self.get_medians(netcdf=patch_netcdf, start_bin=start_bin, window=self.window_len)
-            print(f'read medians from patch {patch}; medians shape: {medians.shape}')
+                # Load patch netcdf4
+                patch_netcdf = netCDF4.Dataset(patch, 'r')
 
-            # labels is a 3d numpy array (window length, img_size, img_size)
-            # for the time being, we have yearly labels, so window_len will always be 1
-            labels = self.get_labels(netcdf=patch_netcdf, start_bin=start_bin)
+                # Compute on the fly each time, adds overhead for small output_size!!!
+                # medians is a 4d numpy array (window length, bands, img_size, img_size)
+                medians = self.get_medians(netcdf=patch_netcdf, start_bin=start_bin, window=self.window_len)
+                print(f'read medians from patch {patch}; medians shape: {medians.shape}')
 
-            if self.requires_pad:
-                medians = np.pad(medians,
-                                 pad_width=((0, 0), (0, 0), (self.pad_top, self.pad_bot), (self.pad_left, self.pad_right)),
-                                 mode='constant',
-                                 constant_values=0)
+                # labels is a 3d numpy array (window length, img_size, img_size)
+                # for the time being, we have yearly labels, so window_len will always be 1
+                labels = self.get_labels(netcdf=patch_netcdf, start_bin=start_bin)
 
-                labels = np.pad(labels,
-                                pad_width=((self.pad_top, self.pad_bot), (self.pad_left, self.pad_right)),
-                                mode='constant',
-                                constant_values=0
-                                )
+                if self.requires_pad:
+                    medians = np.pad(medians,
+                                     pad_width=((0, 0), (0, 0), (self.pad_top, self.pad_bot), (self.pad_left, self.pad_right)),
+                                     mode='constant',
+                                     constant_values=0)
 
-            print(f'medians requires_subpatching: {self.requires_subpatching}, medians shape: {medians.shape}, subpatch_id: {subpatch_id}')
-            if self.requires_subpatching:
-                window_len, num_bands, width, height = medians.shape
+                    labels = np.pad(labels,
+                                    pad_width=((self.pad_top, self.pad_bot), (self.pad_left, self.pad_right)),
+                                    mode='constant',
+                                    constant_values=0
+                                    )
 
-                # Side_h should be equal length of side_w
-                side_h = self.output_size[0]
-                side_w = self.output_size[1]
-                num_subpatches_h = int(self.padded_patch_height // side_h)
-                num_subpatches_w = int(self.padded_patch_width // side_w)
+                print(f'medians requires_subpatching: {self.requires_subpatching}, medians shape: {medians.shape}, subpatch_id: {subpatch_id}')
+                if self.requires_subpatching:
+                    window_len, num_bands, width, height = medians.shape
 
-                # Reshape medians
-                # From:             (window length, bands, pad_img_size, pad_img_size)
-                # To                (window length, bands, N, output_shape[0], M, output_shape[1])
-                # Transpose         (N, M, window length, bands, output_shape[0], output_shape[1])
-                # Reshape           (N * M, window length, bands, output_shape[0], output_shape[1])
-                medians = medians.reshape(window_len, num_bands, num_subpatches_w, side_w, num_subpatches_h, side_h) \
-                    .transpose(2, 4, 0, 1, 3, 5) \
-                    .reshape(-1, window_len, num_bands, side_w, side_h)
-                print(f'subpatch medians shape: {medians.shape}; subpatch_id: {subpatch_id}')
+                    # Side_h should be equal length of side_w
+                    side_h = self.output_size[0]
+                    side_w = self.output_size[1]
+                    num_subpatches_h = int(self.padded_patch_height // side_h)
+                    num_subpatches_w = int(self.padded_patch_width // side_w)
 
-                # Same for labels, but no bands and window length dimensions
-                labels = labels.reshape(num_subpatches_w, side_w, num_subpatches_h, side_h)\
-                    .transpose(0, 2, 1, 3)\
-                    .reshape(-1, side_w, side_h)
+                    # Reshape medians
+                    # From:             (window length, bands, pad_img_size, pad_img_size)
+                    # To                (window length, bands, N, output_shape[0], M, output_shape[1])
+                    # Transpose         (N, M, window length, bands, output_shape[0], output_shape[1])
+                    # Reshape           (N * M, window length, bands, output_shape[0], output_shape[1])
+                    medians = medians.reshape(window_len, num_bands, num_subpatches_w, side_w, num_subpatches_h, side_h) \
+                        .transpose(2, 4, 0, 1, 3, 5) \
+                        .reshape(-1, window_len, num_bands, side_w, side_h)
+                    print(f'subpatch medians shape: {medians.shape}; subpatch_id: {subpatch_id}')
 
-                # Return requested sub-patch
-                medians = medians[subpatch_id]
-                labels = labels[subpatch_id]
+                    # Same for labels, but no bands and window length dimensions
+                    labels = labels.reshape(num_subpatches_w, side_w, num_subpatches_h, side_h)\
+                        .transpose(0, 2, 1, 3)\
+                        .reshape(-1, side_w, side_h)
+                    print(f'labels shape: {labels.shape}')
+                    # Save the medians that we've just generated for later use
+                    #print(f'TODO: save medians to {block_dir}; medians shape: {medians.shape}')
+                    self.save_subpatch_medians(block_dir, medians, labels)
+                    #logging.info(f'TODO: save medians to {block_dir}')
 
-            # Save the medians that we've just generated for later use
-            #print(f'TODO: save medians to {block_dir}; medians shape: {medians.shape}')
-            self.save_medians(block_dir, medians, labels)
-            #logging.info(f'TODO: save medians to {block_dir}')
+                    # Return requested sub-patch
+                    medians = medians[subpatch_id]
+                    labels = labels[subpatch_id]
+                print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
 
         # Normalize data to range [0-1]
         if self.requires_norm:
@@ -630,7 +664,7 @@ class PADDataset(Dataset):
                                           requires_norm=self.requires_norm,
                                           reference_bands=self.bands)
 
-        print(f'returning medians, shape: {out["medians"].shape}, masks shape: {out["masks"].shape}, label shape: {out["labels"].shape}')
+        print(f'returning idx {idx}: medians shape: {out["medians"].shape}, labels shape: {out["labels"].shape}, parcels shape: {out["parcels"].shape}')
         return out
 
 
@@ -639,4 +673,8 @@ class PADDataset(Dataset):
         Computes the total number of produced sequences,
         i.e. one item will contain the patch medians for a single time window
         '''
-        return int(self.num_patches * self.num_subpatches) * (self.num_buckets - self.window_len + 1)
+        if self.fixed_window:
+            # Window size is 1 for fixed_window
+            return int(self.num_patches * self.num_subpatches)
+        else:
+            return int(self.num_patches * self.num_subpatches) * (self.num_buckets - self.window_len + 1)
