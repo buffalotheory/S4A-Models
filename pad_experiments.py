@@ -86,7 +86,9 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         init_epoch = last_epoch + 1
         logging.info(f'init_epoch: {init_epoch}')
         assert init_epoch > 0, "ERROR: failed to init epoch"
-        max_epoch = init_epoch + num_epochs
+        # Change the formula for setting the number of epochs to use when resuming
+        # max_epoch = init_epoch + num_epochs
+        max_epoch = num_epochs
         logging.info(f'init_epoch: {init_epoch}, num_epochs: {num_epochs}, max_epoch={max_epoch}')
         resume_from_checkpoint = lastfile
     elif resume is not None:
