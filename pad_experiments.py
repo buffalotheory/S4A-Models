@@ -498,7 +498,7 @@ def main():
                                  #checkpoint_callback=True,
                                  #resume_from_checkpoint=resume_from_checkpoint,
                                  fast_dev_run=args.devtest,
-                                 log_every_n_steps=9,
+                                 log_every_n_steps=4,
                                  #strategy='ddp'
                                  )
             logging.debug(f"trainer loaded; trainer.num_training_batches: {trainer.num_training_batches}")
