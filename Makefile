@@ -4,9 +4,9 @@ PYTESTS = \
 		wandb_test
 
 SHTESTS = \
+		run_overfit_convlstm \
+		resume_overfit_convlstm \
 		run_convstar \
-		run_pad_convlstm \
-		resume_pad_convlstm \
 		run_unet \
 
 DT = $(shell date "+%Y%m%d_%H%M%S")
