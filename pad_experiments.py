@@ -70,7 +70,7 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         # Use last run's latest checkpoint to resume training
         logging.info(f'search_path: {results_path}/run_*')
         run_paths = sorted(results_path.glob('run_*'))
-        logging.info(f'run_paths: {run_paths}')
+        #logging.info(f'run_paths: {run_paths}')
         run_path = run_paths[-1]
         logging.info(f'run_path: {run_path}')
         ckpt_files = (run_path / 'checkpoints').glob('*.ckpt')
