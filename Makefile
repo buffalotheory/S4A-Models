@@ -15,7 +15,10 @@ DT = $(shell date "+%Y%m%d_%H%M%S")
 
 .PHONY: $(PYTESTS) $(SHTESTS) run_all test_all
 
-default: run_pad_convlstm
+default:
+	make run_overfit_convlstm \
+	&& make resume_overfit_convlstm \
+	&& make resume_overfit_convlstm
 
 $(PYTESTS):
 	make -C test $(@)
