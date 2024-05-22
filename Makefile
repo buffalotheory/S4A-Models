@@ -12,8 +12,6 @@ SHTESTS = \
 
 DT = $(shell date "+%Y%m%d_%H%M%S")
 
-#		run_checkpoint_resume_test \
-
 .PHONY: $(PYTESTS) $(SHTESTS) run_all test_all
 
 default: overfit_lstm
