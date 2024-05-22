@@ -294,9 +294,10 @@ def main():
                     if int(epoch_lr[0]) == init_epoch:
                         init_learning_rate = float(epoch_lr[1])
 
-            model = ConvLSTM(run_path, LINEAR_ENCODER, learning_rate=init_learning_rate,
-                             parcel_loss=args.parcel_loss, class_weights=class_weights,
-                             wandb=args.wandb)
+            checkpoint = torch.load(resume_from_checkpoint)
+            logging.info(f'checkpoint keys: {checkpoint.keys()}, epoch: {checkpoint["epoch"]}')
+            logging.info(f'loading ConvLSTM from checkpoint file {resume_from_checkpoint}')
+            model = ConvLSTM.load_from_checkpoint(resume_from_checkpoint, checkpoint_epoch=init_epoch)
         else:
             model = ConvLSTM(run_path, LINEAR_ENCODER, parcel_loss=args.parcel_loss,
                              class_weights=class_weights,
