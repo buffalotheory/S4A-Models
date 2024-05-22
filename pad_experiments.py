@@ -96,13 +96,12 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
     return run_path, resume_from_checkpoint, max_epoch, init_epoch
 
 
-def create_model_log_path(log_path, prefix, model):
+def create_model_log_path(log_path):
     '''
     Creates the path to contain results for the given model.
     '''
-    results_path = log_path / f'{model}' / f'{prefix}'
+    results_path = Path(log_path)
     results_path.mkdir(exist_ok=True, parents=True)
-
     return results_path
 
 
@@ -253,10 +252,14 @@ def main():
     else:
         class_weights = None
 
+    results_path = log_path / f'{args.model}' / f'{args.prefix}_e{args.num_epochs}_b{args.batch_size}'
+    if args.resume:
+        assert results_path.exists(), f'results_path "{results_path}" not found'
+
     if args.model == 'convlstm':
         args.img_size = [int(dim) for dim in args.img_size]
 
-        results_path = create_model_log_path(log_path, prefix, args.model)
+        results_path = create_model_log_path(results_path)
 
         run_path, resume_from_checkpoint, max_epoch, init_epoch = \
             resume_or_start(results_path, args.resume, args.train, args.num_epochs, args.load_checkpoint)
@@ -313,7 +316,7 @@ def main():
     elif args.model == 'convstar':
         args.img_size = [int(dim) for dim in args.img_size]
 
-        results_path = create_model_log_path(log_path, prefix, args.model)
+        results_path = create_model_log_path(results_path)
 
         run_path, resume_from_checkpoint, max_epoch, init_epoch = \
             resume_or_start(results_path, args.resume, args.train, args.num_epochs, args.load_checkpoint)
@@ -352,7 +355,7 @@ def main():
     elif args.model == 'unet':
         args.img_size = [int(dim) for dim in args.img_size]
 
-        results_path = create_model_log_path(log_path, prefix, args.model)
+        results_path = create_model_log_path(results_path)
 
         run_path, resume_from_checkpoint, max_epoch, init_epoch = \
             resume_or_start(results_path, args.resume, args.train, args.num_epochs, args.load_checkpoint)
@@ -393,7 +396,7 @@ def main():
         args.img_size = (1, 1)
         args.bands = ['B03', 'B04', 'B08']
 
-        results_path = create_model_log_path(log_path, prefix, args.model)
+        results_path = create_model_log_path(results_path)
 
         run_path, resume_from_checkpoint, max_epoch, init_epoch = \
             resume_or_start(results_path, args.resume, args.train, args.num_epochs, args.load_checkpoint)
