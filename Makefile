@@ -28,7 +28,7 @@ $(PYTESTS):
 
 $(SHTESTS):
 	time bash $(@).sh 2>&1 | uniq | tee logs/$(DT)_$(@).log
-	xz logs/*.log
+	xz logs/$(DT)_$(@).log &
 
 test_all:
 	make $(PYTESTS)
