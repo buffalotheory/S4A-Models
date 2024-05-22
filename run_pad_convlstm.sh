@@ -4,7 +4,7 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=5
+EPOCHS=1
 PREFIX=overfit
 BATCH_SIZE=9
 NUM_WORKERS=9
@@ -19,7 +19,7 @@ time python pad_experiments.py \
       --root_path_coco coco_files/ \
       --prefix_coco $PREFIX \
       --netcdf_path ../dataset/ \
-      --prefix ${MODEL}_${PREFIX}_e${EPOCHS}_bs${BATCH_SIZE} \
+      --prefix ${PREFIX}_e${EPOCHS}_bs${BATCH_SIZE} \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
       --bands B02 B03 B04 B08 \

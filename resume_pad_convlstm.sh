@@ -6,7 +6,7 @@ set -x
 # Variables to offer at this stage of the test run
 
 MODEL=convlstm
-EPOCHS=5
+EPOCHS=1
 PREFIX=overfit
 BATCH_SIZE=9
 NUM_WORKERS=9
@@ -29,7 +29,7 @@ time python pad_experiments.py \
       --root_path_coco coco_files/ \
       --prefix_coco $PREFIX \
       --netcdf_path ./dataset/ \
-      --prefix $prefix \
+      --prefix $PREFIX \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
       --bands B02 B03 B04 B08 \
@@ -40,6 +40,7 @@ time python pad_experiments.py \
       --fixed_window \
 
 ECODE=$?
+set +x
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
 
 # Disabled options
