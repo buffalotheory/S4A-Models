@@ -64,12 +64,13 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         run_path = load_checkpoint.parent.parent
         init_epoch = int(load_checkpoint.stem.split('=')[1].split('-')[0])
         max_epoch = init_epoch + 1
+        logging.info(f'init_epoch: {init_epoch}, num_epochs: {num_epochs}, max_epoch={max_epoch}')
         resume_from_checkpoint = load_checkpoint
     elif resume == 'last':
         # Use last run's latest checkpoint to resume training
-        logging.debug(f'search_path: {results_path}/run_*')
+        logging.info(f'search_path: {results_path}/run_*')
         run_paths = sorted(results_path.glob('run_*'))
-        logging.debug(f'run_paths: {run_paths}')
+        logging.info(f'run_paths: {run_paths}')
         run_path = run_paths[-1]
 
         epoch_ckpt = {int(x.stem.split('=')[-1]): x for x in (run_path / 'checkpoints').glob('*')}
@@ -85,15 +86,18 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         run_path = resume.parent.parent
         init_epoch = int(resume.stem.split('=')[1].split('-')[0])
         max_epoch = init_epoch + num_epochs
+        logging.info(f'init_epoch: {init_epoch}, num_epochs: {num_epochs}, max_epoch={max_epoch}')
         resume_from_checkpoint = resume
     elif train:
         # Create folder to save this run's results into
         run_ts = datetime.now().strftime("%Y%m%d%H%M%S")
         run_path = results_path / f'run_{run_ts}'
+        logging.info(f'run_path: {run_path}')
         run_path.mkdir(exist_ok=True, parents=True)
         resume_from_checkpoint = None
         init_epoch = 0
         max_epoch = num_epochs
+        logging.info(f'init_epoch: {init_epoch}, num_epochs: {num_epochs}, max_epoch={max_epoch}')
 
     return run_path, resume_from_checkpoint, max_epoch, init_epoch
 
@@ -117,8 +121,8 @@ def main():
         '%(lineno)d',
         '%(message)s'
     ])
-    logging.basicConfig(format=log_format, level=logging.DEBUG)
-    logging.info(f"Enter main.  log format: {log_format}")
+    logging.basicConfig(format=log_format, level=logging.INFO)
+    logging.info(f"Enter main.  log format: {log_format}, level={logging.INFO}")
 
      # Parse user arguments
     parser = argparse.ArgumentParser()
@@ -478,7 +482,7 @@ def main():
         tb_logger = pl_loggers.TensorBoardLogger(run_path / 'tensorboard')
 
         if torch.backends.mps.is_available():
-            logging.debug("Loading trainer")
+            logging.info(f"Loading trainer.  max_epoch: {max_epoch}")
             trainer = pl.Trainer(accelerator="mps",
                                  devices=1,
                                  num_nodes=args.num_nodes,
