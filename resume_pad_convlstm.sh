@@ -39,6 +39,7 @@ time python pad_experiments.py \
 ECODE=$?
 set +x
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py resume (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
+exit $ECODE
 
 # Disabled options
 #      --wandb \
