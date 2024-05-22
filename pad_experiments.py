@@ -484,7 +484,7 @@ def main():
                                  num_nodes=args.num_nodes,
                                  #progress_bar_refresh_rate=20,
                                  min_epochs=1,
-                                 max_epochs=max_epoch + 1,
+                                 max_epochs=max_epoch,
                                  check_val_every_n_epoch=1,
                                  precision=32,
                                  callbacks=callbacks,
