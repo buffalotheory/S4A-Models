@@ -16,8 +16,6 @@ DT = $(shell date "+%Y%m%d_%H%M%S")
 .PHONY: $(PYTESTS) $(SHTESTS) run_all test_all
 
 default: run_pad_convlstm
-#	time ./$(@).sh 2>&1 | tee logs/$(DT)_$(@).log
-#	xz logs/*.log
 
 $(PYTESTS):
 	make -C test $(@)
