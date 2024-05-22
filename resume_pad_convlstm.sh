@@ -11,6 +11,8 @@ PREFIX=overfit
 BATCH_SIZE=9
 NUM_WORKERS=9
 
+results_path=${PREFIX}_e${EPOCHS}_bs${BATCH_SIZE}
+
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:resuming pad_experiments.py with model $MODEL test: $PREFIX" >&2
 
 ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240516144730/run_20240517075542/checkpoints/epoch=0-step=4.ckpt
@@ -29,7 +31,7 @@ time python pad_experiments.py \
       --root_path_coco coco_files/ \
       --prefix_coco $PREFIX \
       --netcdf_path ./dataset/ \
-      --prefix $PREFIX \
+      --prefix ${results_path} \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
       --bands B02 B03 B04 B08 \
@@ -41,7 +43,7 @@ time python pad_experiments.py \
 
 ECODE=$?
 set +x
-echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py resume (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
 
 # Disabled options
 #      --wandb \
