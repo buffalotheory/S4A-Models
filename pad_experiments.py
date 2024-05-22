@@ -258,7 +258,7 @@ def main():
     else:
         class_weights = None
 
-    results_path = log_path / f'{args.model}' / f'{args.prefix}_e{args.num_epochs}_b{args.batch_size}'
+    results_path = log_path / f'{args.model}' / f'{args.prefix}'
     if args.resume:
         assert results_path.exists(), f'results_path "{results_path}" not found'
 
