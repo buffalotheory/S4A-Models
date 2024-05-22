@@ -246,6 +246,7 @@ class PADDataset(Dataset):
             logging.debug(f'Creating medians_dir: {self.medians_dir}')
             self.medians_dir.mkdir(parents=True)
 
+        # TODO: create all medians files here
 
     def get_padding_offset(self):
         img_size_x = self.patch_height
@@ -363,80 +364,6 @@ class PADDataset(Dataset):
         return labels
 
 
-    def save_medians(self, patch_dir, idx, maxidx, medians, labels):
-        #logging.debug(f'save medians to {patch_dir}; medians shape: {medians.shape}')
-        num_bins = medians.shape[0]
-        num_bands = medians.shape[1]
-
-        bins_pad = len(str(num_bins))
-        subs_pad = len(str(num_bins * num_bands))
-        sub_idx = 0
-        print(f'Saving medians; shape: {medians.shape}, num_bins: {num_bins}, num_bands: {num_bands}')
-        for binidx in range(num_bins):
-            for bandidx in range(num_bands):
-                #logging.info(f'  saving {num_bins} bins of information')
-                for t in range(num_bins):
-                    outfile = patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}'
-                    if t == 0:
-                        print(f'saving {num_bins} bins; first outfile: {outfile}, shape: {medians.shape}')
-                    np.save(outfile, medians[i, j, t, :, :, :].astype(medians_dtype))
-                sub_idx += 1
-
-        # Save labels
-        labels = get_labels(netcdf, output_size, pad_top, pad_bot, pad_left, pad_right)
-        logging.info(f'label shape before sliding window: {labels.shape}, output_size: {output_size}')
-        labels = sliding_window_view(labels, output_size, output_size)
-        logging.info(f'label shape after sliding window: {labels.shape}')
-        if len(labels.shape) > 4:
-            labels = labels.squeeze()  # shape: (subpatches_in_row, subpatches_in_col, height, width)
-            logging.info(f'label shape after squeeze: {labels.shape}')
-
-        lbl_idx = 0
-        lbl_pad = len(str(labels.shape[0] * labels.shape[1]))
-        for i in range(labels.shape[0]):
-            for j in range(labels.shape[1]):
-                np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j].astype(label_dtype))
-                lbl_idx += 1
-
-
-    def cache_medians(self, patch_dir, idx, output):
-
-        #logging.debug(f'save medians to {patch_dir}; medians shape: {medians.shape}')
-        medians = output['medians']
-        labels = output['labels']
-
-        num_bins, num_bands = medians.shape[:2]
-        bins_pad = len(str(medians.shape[-4]))
-        subs_pad = len(str(medians.shape[0] * medians.shape[1]))
-        sub_idx = 0
-        print(f'Saving medians; shape: {medians.shape}, num_bins: {num_bins}, num_bands: {num_bands}, bins_pad: {bins_pad}, sub_pad: {subs_pad}')
-        for i in range(medians.shape[0]):
-            for j in range(medians.shape[1]):
-                #logging.info(f'  saving {num_bins} bins of information')
-                for t in range(num_bins):
-                    outfile = patch_dir / f'sub{str(sub_idx).rjust(subs_pad, "0")}_bin{str(t).rjust(bins_pad, "0")}'
-                    if t == 0:
-                        print(f'saving {num_bins} bins; first outfile: {outfile}')
-                    np.save(outfile, medians[i, j, t, :, :, :].astype(medians_dtype))
-                sub_idx += 1
-
-        # Save labels
-        labels = get_labels(netcdf, output_size, pad_top, pad_bot, pad_left, pad_right)
-        logging.info(f'label shape before sliding window: {labels.shape}, output_size: {output_size}')
-        labels = sliding_window_view(labels, output_size, output_size)
-        logging.info(f'label shape after sliding window: {labels.shape}')
-        if len(labels.shape) > 4:
-            labels = labels.squeeze()  # shape: (subpatches_in_row, subpatches_in_col, height, width)
-            logging.info(f'label shape after squeeze: {labels.shape}')
-
-        lbl_idx = 0
-        lbl_pad = len(str(labels.shape[0] * labels.shape[1]))
-        for i in range(labels.shape[0]):
-            for j in range(labels.shape[1]):
-                np.save(patch_dir / f'labels_sub{str(lbl_idx).rjust(lbl_pad, "0")}', labels[i, j].astype(label_dtype))
-                lbl_idx += 1
-
-
     def load_medians(self, path: Path, subpatch_id: int, start_bin: int) -> Tuple[np.ndarray, np.ndarray]:
         """
         Loads precomputed medians for requested path.
@@ -509,6 +436,7 @@ class PADDataset(Dataset):
 
         return int(start_bin), int(patch_id), int(subpatch_id)
 
+
     def get_subpatch_medians(self, block_dir, subpatch_id):
         medians_file = block_dir / f'medians_{str(subpatch_id).rjust(2, "0")}.npy'
         if not medians_file.is_file():
@@ -521,6 +449,7 @@ class PADDataset(Dataset):
         medians = np.load(medians_file)
         labels = np.load(labels_file)
         return medians, labels
+
 
     def save_subpatch_medians(self, block_dir, medians, labels):
         print(f'saving {medians.shape[0]} subpatches to files in {block_dir}.  labels shape: {labels.shape}')
@@ -619,7 +548,7 @@ class PADDataset(Dataset):
                     # Return requested sub-patch
                     medians = medians[subpatch_id]
                     labels = labels[subpatch_id]
-                #print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
+                print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
 
         # Normalize data to range [0-1]
         if self.requires_norm:
