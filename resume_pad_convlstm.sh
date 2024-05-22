@@ -15,11 +15,6 @@ results_path=${PREFIX}_e${EPOCHS}_bs${BATCH_SIZE}
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:resuming pad_experiments.py with model $MODEL test: $PREFIX" >&2
 
-ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240516144730/run_20240517075542/checkpoints/epoch=0-step=4.ckpt
-ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/202405170804/run_20240517090313/checkpoints/epoch=4-step=45.ckpt
-ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240517_095529/run_20240517095605/checkpoints/epoch=4-step=45.ckpt
-ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240520/run_20240520193115/checkpoints/epoch=10-step=44.ckpt
-ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240522/run_20240522113233/checkpoints/epoch=4-step=20.ckpt
 ckpt=last
 
 time python pad_experiments.py \
@@ -48,3 +43,10 @@ echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py resume (${MODE
 # Disabled options
 #      --wandb \
 #
+
+# Previous checkpoint examples
+#ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240516144730/run_20240517075542/checkpoints/epoch=0-step=4.ckpt
+#ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/202405170804/run_20240517090313/checkpoints/epoch=4-step=45.ckpt
+#ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240517_095529/run_20240517095605/checkpoints/epoch=4-#step=45.ckpt
+#ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240520/run_20240520193115/checkpoints/epoch=10-step=44.ckpt
+#ckpt=/Users/iahansen/admin/master_study/P7/repo/Sen4AgriNet/S4A-Models/logs/convlstm/20240522/run_20240522113233/checkpoints/epoch=4-step=20.ckpt
