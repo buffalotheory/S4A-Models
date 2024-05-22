@@ -67,7 +67,9 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         resume_from_checkpoint = load_checkpoint
     elif resume == 'last':
         # Use last run's latest checkpoint to resume training
+        logging.debug(f'search_path: {results_path}/run_*')
         run_paths = sorted(results_path.glob('run_*'))
+        logging.debug(f'run_paths: {run_paths}')
         run_path = run_paths[-1]
 
         epoch_ckpt = {int(x.stem.split('=')[-1]): x for x in (run_path / 'checkpoints').glob('*')}
