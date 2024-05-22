@@ -6,6 +6,7 @@ PYTESTS = \
 SHTESTS = \
 		run_convstar \
 		run_pad_convlstm \
+		resume_pad_convlstm \
 		run_unet \
 
 DT = $(shell date "+%Y%m%d_%H%M%S")
