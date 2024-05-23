@@ -539,7 +539,6 @@ class PADDataset(Dataset):
                     labels = labels.reshape(num_subpatches_w, side_w, num_subpatches_h, side_h)\
                         .transpose(0, 2, 1, 3)\
                         .reshape(-1, side_w, side_h)
-                    print(f'labels shape: {labels.shape}')
                     # Save the medians that we've just generated for later use
                     #print(f'TODO: save medians to {block_dir}; medians shape: {medians.shape}')
                     self.save_subpatch_medians(block_dir, medians, labels)
