@@ -8,12 +8,14 @@ SHTESTS = \
 		resume_overfit_convlstm \
 		run_multiset_convlstm \
 		resume_multiset_convlstm \
+		run_bigset1_convlstm \
+		run_bigset79G_convlstm \
 		run_convstar \
 		run_unet \
 
 DT = $(shell date "+%Y%m%d_%H%M%S")
 
-.PHONY: $(PYTESTS) $(SHTESTS) run_all test_all
+.PHONY: $(PYTESTS) $(SHTESTS) run_all test_all make_split show_tests
 
 default: run_multiset_convlstm
 
