@@ -244,7 +244,7 @@ class PADDataset(Dataset):
         self.medians_dir = Path(f'logs/medians/{prefix}_medians_{group_freq}_{"".join(self.bands)}/{mode}')
         if not self.medians_dir.is_dir():
             logging.debug(f'Creating medians_dir: {self.medians_dir}')
-            self.medians_dir.mkdir(parents=True)
+            self.medians_dir.mkdir(parents=True, exists_ok=True)
 
         # TODO: create all medians files here
 
