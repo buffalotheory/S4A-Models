@@ -276,7 +276,9 @@ def main():
     if args.model == 'convlstm':
         args.img_size = [int(dim) for dim in args.img_size]
 
+        logging.info(f'results_path: {results_path}')
         results_path = create_model_log_path(results_path)
+        logging.info(f'results_path: {results_path}')
 
         run_path, resume_from_checkpoint, max_epoch, init_epoch = \
             resume_or_start(results_path, args.resume, args.train, args.num_epochs, args.load_checkpoint)

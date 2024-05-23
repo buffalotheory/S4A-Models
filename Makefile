@@ -7,6 +7,7 @@ SHTESTS = \
 		run_overfit_convlstm \
 		resume_overfit_convlstm \
 		run_multiset_convlstm \
+		resume_multiset_convlstm \
 		run_convstar \
 		run_unet \
 
