@@ -1,3 +1,5 @@
+SH_TEST_FILES = $(shell ls run*.sh resume*.sh)
+
 PYTESTS = \
     metal_test \
 		pl_test \
@@ -36,3 +38,9 @@ test_all:
 
 run_all:
 	make $(SHTESTS)
+
+show_tests:
+	@echo "test scripts: $(SH_TEST_FILES)"
+
+make_split:
+	python3 coco_data_split.py --how='random' --data_path=../dataset/
