@@ -25,7 +25,7 @@ time python pad_experiments.py \
       --weighted_loss \
       --root_path_coco coco_files/ \
       --prefix_coco $PREFIX \
-      --netcdf_path ./dataset/ \
+      --netcdf_path ../dataset/ \
       --prefix ${results_path} \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
