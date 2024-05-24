@@ -518,6 +518,7 @@ class ConvLSTM(pl.LightningModule):
     def on_test_epoch_end(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
+        logging.info(f'called confusion matrix')
 
         self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label
 
@@ -526,6 +527,7 @@ class ConvLSTM(pl.LightningModule):
         fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
         tp = np.diag(self.confusion_matrix)
         tn = self.confusion_matrix.sum() - (fp + fn + tp)
+        logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
 
         # Sensitivity, hit rate, recall, or true positive rate
         tpr = tp / (tp + fn)
@@ -543,6 +545,7 @@ class ConvLSTM(pl.LightningModule):
         fdr = fp / (tp + fp)
         # F1-score
         f1 = (2 * ppv * tpr) / (ppv + tpr)
+        logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
 
         # Overall accuracy
         accuracy = (tp + tn) / (tp + fp + fn + tn)
