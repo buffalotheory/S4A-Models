@@ -71,18 +71,34 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         logging.info(f'search_path: {results_path}/run_*')
         run_paths = sorted(results_path.glob('run_*'))
         logging.info(f'run_paths: {run_paths}')
-        run_path = run_paths[-1]
+        run_path = sorted(run_paths)[-1]
         logging.info(f'run_path: {run_path}')
         ckpt_files = (run_path / 'checkpoints').glob('*.ckpt')
         ckpt_file_list = [f for f in ckpt_files]
         logging.info(f'ckpt_file_list: {ckpt_file_list}')
         assert len(ckpt_file_list) > 0, f"ERROR: checkpoint files found in {run_path / 'checkpoints'}"
-        lastfile = sorted(ckpt_file_list)[-1]
-        logging.info(f'last ckpt file: {lastfile}')
-        assert lastfile.is_file(), f'ERROR: {lastfile.is_file()} not found'
-        last_epoch = int(lastfile.name.split('-')[0].split('=')[-1])
-        logging.info(f'last_epoch: {last_epoch}')
-        assert last_epoch >= 0, f'ERROR: {last_epoch} is not a positive integer'
+        fparts = [str(f.name).split('-') for f in ckpt_file_list]
+        logging.info(f'fparts: {fparts}')
+        last_epoch = 0
+        last_ver = None
+        for f in fparts:
+            e = int(f[0].split('=')[-1])
+            logging.info(f'epoch: {e}')
+            last_epoch = max(e, last_epoch)
+            if len(f) > 2:
+                v = int(f[2].split('.')[0][1:])
+                if last_ver is None: last_ver = v
+                last_ver = max(v, last_ver)
+        logging.info(f'last_epoch: {last_epoch}, last_ver: {last_ver}')
+        if last_ver is None:
+            ckpt_files = (run_path / 'checkpoints').glob(f'epoch={last_epoch}*.ckpt')
+        else:
+            ckpt_files = (run_path / 'checkpoints').glob(f'epoch={last_epoch}*-v{last_ver}.ckpt')
+        flist = [f for f in ckpt_files]
+        assert len(flist) == 1, "Expected to isolate 1 checkpoint file"
+        resume_from_checkpoint = flist[0]
+        assert resume_from_checkpoint.is_file(), f'ERROR: {resume_from_checkpoint.is_file()} not found'
+        logging.info(f'checkpoint file: {resume_from_checkpoint}')
         init_epoch = last_epoch + 1
         logging.info(f'init_epoch: {init_epoch}')
         assert init_epoch > 0, "ERROR: failed to init epoch"
@@ -90,7 +106,6 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         # max_epoch = init_epoch + num_epochs
         max_epoch = num_epochs
         logging.info(f'init_epoch: {init_epoch}, num_epochs: {num_epochs}, max_epoch={max_epoch}')
-        resume_from_checkpoint = lastfile
     elif resume is not None:
         # Load the given checkpoint to resume training
         resume = Path(resume)
