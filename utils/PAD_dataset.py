@@ -244,7 +244,7 @@ class PADDataset(Dataset):
         self.medians_dir = Path(f'logs/medians/{prefix}_medians_{group_freq}_{"".join(self.bands)}/{mode}')
         if not self.medians_dir.is_dir():
             logging.debug(f'Creating medians_dir: {self.medians_dir}')
-            self.medians_dir.mkdir(parents=True, exists_ok=True)
+            self.medians_dir.mkdir(parents=True, exist_ok=True)
 
         # TODO: create all medians files here
 
@@ -455,7 +455,7 @@ class PADDataset(Dataset):
         print(f'saving {medians.shape[0]} subpatches to files in {block_dir}.  labels shape: {labels.shape}')
         if not block_dir.is_dir():
             logging.debug(f'Creating block_dir: {block_dir}')
-            block_dir.mkdir(parents=True)
+            block_dir.mkdir(parents=True, exist_ok=True)
         for subpatch_id in range(medians.shape[0]):
             medians_file = block_dir / f'medians_{str(subpatch_id).rjust(2, "0")}.npy'
             if not medians_file.is_file():
