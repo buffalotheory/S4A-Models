@@ -30,6 +30,7 @@ time python pad_experiments.py \
       --num_workers $NUM_WORKERS \
       --num_gpus 1 \
       --fixed_window \
+      --wandb
 
 ECODE=$?
 set +x

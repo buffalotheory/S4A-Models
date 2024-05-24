@@ -70,36 +70,40 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
         # Use last run's latest checkpoint to resume training
         logging.info(f'search_path: {results_path}/run_*')
         run_paths = sorted(results_path.glob('run_*'))
-        logging.info(f'run_paths: {run_paths}')
+        #logging.info(f'run_paths: {run_paths}')
         run_path = sorted(run_paths)[-1]
         logging.info(f'run_path: {run_path}')
-        ckpt_files = (run_path / 'checkpoints').glob('*.ckpt')
-        ckpt_file_list = [f for f in ckpt_files]
-        logging.info(f'ckpt_file_list: {ckpt_file_list}')
-        assert len(ckpt_file_list) > 0, f"ERROR: checkpoint files found in {run_path / 'checkpoints'}"
-        fparts = [str(f.name).split('-') for f in ckpt_file_list]
-        logging.info(f'fparts: {fparts}')
-        last_epoch = 0
-        last_ver = None
-        for f in fparts:
-            e = int(f[0].split('=')[-1])
-            logging.info(f'epoch: {e}')
-            last_epoch = max(e, last_epoch)
-            if len(f) > 2:
-                v = int(f[2].split('.')[0][1:])
-                if last_ver is None: last_ver = v
-                last_ver = max(v, last_ver)
-        logging.info(f'last_epoch: {last_epoch}, last_ver: {last_ver}')
-        if last_ver is None:
-            ckpt_files = (run_path / 'checkpoints').glob(f'epoch={last_epoch}*.ckpt')
+
+        # we have to handle versioned files (with a -vN.ckpt) differently than unversioned files without it
+        vckpt_files = (run_path / 'checkpoints').glob('*-v*.ckpt')
+        vcfn = [f.name.split('.')[0] for f in vckpt_files]
+        if len(vcfn) > 0:
+            versions = [int(v.split('-')[-1][1:]) for v in vcfn]
+            logging.info(f'versions: {versions}')
+            last_ver = max(versions)
+            logging.info(f'max version: {last_ver}')
+            # Now get the max epoch
+            vckpt_files = (run_path / 'checkpoints').glob(f'*-v{last_ver}.ckpt')
+            epochs = [int(e.name.split('-')[0].split('=')[-1]) for e in vckpt_files]
+            logging.info(f'epochs: {epochs}')
+            last_epoch = max(epochs)
+            logging.info(f'max epochs: {last_epoch}')
+            # Now get the path and filename matching the epoch and version
+            fn = [f for f in (run_path / 'checkpoints').glob(f'epoch={last_epoch}*-v{last_ver}.ckpt')]
+            logging.info(f'versioned checkpoint file: {fn}')
+            assert len(fn) == 1, f"ERROR: expected to find 1 checkpoint file.  Found '{fn}'"
+            resume_from_checkpoint = fn[0]
         else:
-            ckpt_files = (run_path / 'checkpoints').glob(f'epoch={last_epoch}*-v{last_ver}.ckpt')
-        flist = [f for f in ckpt_files]
-        assert len(flist) == 1, "Expected to isolate 1 checkpoint file"
-        resume_from_checkpoint = flist[0]
-        assert resume_from_checkpoint.is_file(), f'ERROR: {resume_from_checkpoint.is_file()} not found'
-        logging.info(f'checkpoint file: {resume_from_checkpoint}')
-        init_epoch = last_epoch + 1
+            ckpt_files = (run_path / 'checkpoints').glob('*.ckpt')
+            epochs = [f.name.split('-')[0].split('=')[-1] for f in ckpt_files]
+            last_epoch = max(epochs)
+            logging.info(f'max epochs: {last_epoch}')
+            fn = [f for f in (run_path / 'checkpoints').glob(f'epoch={last_epoch}*.ckpt')]
+            logging.info(f'checkpoint file: {fn}')
+            assert len(fn) == 1, f"ERROR: expected to find 1 checkpoint file.  Found '{fn}'"
+            resume_from_checkpoint = fn[0]
+
+        init_epoch = int(last_epoch) + 1
         logging.info(f'init_epoch: {init_epoch}')
         assert init_epoch > 0, "ERROR: failed to init epoch"
         # Change the formula for setting the number of epochs to use when resuming

@@ -6,7 +6,7 @@ set -x
 # Variables to offer at this stage of the test run
 
 MODEL=convlstm
-EPOCHS=1
+EPOCHS=5
 PREFIX=overfit
 BATCH_SIZE=9
 NUM_WORKERS=9
