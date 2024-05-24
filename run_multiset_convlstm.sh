@@ -4,10 +4,12 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=5
+EPOCHS=6
 PREFIX=multiset
 BATCH_SIZE=9
 NUM_WORKERS=9
+
+[[ "$1" == '-e' ]] && EPOCHS=$2
 
 results_path=${PREFIX}_bs${BATCH_SIZE}
 

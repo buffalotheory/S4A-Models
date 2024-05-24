@@ -9,6 +9,8 @@ PREFIX=bigset1
 BATCH_SIZE=9
 NUM_WORKERS=9
 
+[[ "$1" == '-e' ]] && EPOCHS=$2
+
 results_path=${PREFIX}_bs${BATCH_SIZE}
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2

@@ -6,10 +6,12 @@ set -x
 # Variables to offer at this stage of the test run
 
 MODEL=convlstm
-EPOCHS=5
+EPOCHS=3
 PREFIX=multiset
 BATCH_SIZE=9
 NUM_WORKERS=9
+
+[[ "$1" == '-e' ]] && EPOCHS=$2
 
 results_path=${PREFIX}_bs${BATCH_SIZE}
 
