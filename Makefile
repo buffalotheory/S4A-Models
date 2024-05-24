@@ -1,19 +1,9 @@
-SH_TEST_FILES = $(shell ls run*.sh resume*.sh)
-
 PYTESTS = \
     metal_test \
 		pl_test \
 		wandb_test
 
-SHTESTS = \
-		run_overfit_convlstm \
-		resume_overfit_convlstm \
-		run_multiset_convlstm \
-		resume_multiset_convlstm \
-		run_bigset1_convlstm \
-		run_bigset79G_convlstm \
-		run_convstar \
-		run_unet \
+SHTESTS = $(basename $(shell ls run*.sh resume*.sh))
 
 DT = $(shell date "+%Y%m%d_%H%M%S")
 
