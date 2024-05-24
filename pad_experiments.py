@@ -281,6 +281,7 @@ def main():
 
     if args.weighted_loss:
         class_weights = {LINEAR_ENCODER[k]: v for k, v in CLASS_WEIGHTS.items()}
+        logging.info(f'class weights: {class_weights}')
     else:
         class_weights = None
 
