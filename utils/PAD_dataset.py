@@ -452,7 +452,7 @@ class PADDataset(Dataset):
 
 
     def save_subpatch_medians(self, block_dir, medians, labels):
-        print(f'saving {medians.shape[0]} subpatches to files in {block_dir}.  labels shape: {labels.shape}')
+        print(f'saving {medians.shape[0]} subpatches to files in {block_dir}, medians shape: {medians.shape}, labels shape: {labels.shape}')
         if not block_dir.is_dir():
             logging.debug(f'Creating block_dir: {block_dir}')
             block_dir.mkdir(parents=True, exist_ok=True)
@@ -497,7 +497,6 @@ class PADDataset(Dataset):
                 # Compute on the fly each time, adds overhead for small output_size!!!
                 # medians is a 4d numpy array (window length, bands, img_size, img_size)
                 medians = self.get_medians(netcdf=patch_netcdf, start_bin=start_bin, window=self.window_len)
-                print(f'read medians from patch {patch}; medians shape: {medians.shape}')
 
                 # labels is a 3d numpy array (window length, img_size, img_size)
                 # for the time being, we have yearly labels, so window_len will always be 1
@@ -547,7 +546,7 @@ class PADDataset(Dataset):
                     # Return requested sub-patch
                     medians = medians[subpatch_id]
                     labels = labels[subpatch_id]
-                print(f'calculated new medians and labels for subpatch {subpatch_id}: medians shape: {medians.shape}, labels.shape: {labels.shape}')
+                print(f'calculated {num_subpatches_h * num_subpatches_w} new medians and labels for {block_dir} (triggered by subpatch {subpatch_id}): medians shape: {medians.shape}, labels.shape: {labels.shape}')
 
         # Normalize data to range [0-1]
         if self.requires_norm:
