@@ -515,7 +515,7 @@ class ConvLSTM(pl.LightningModule):
         self.epoch_valid_losses = []
 
 
-    def test_epoch_end(self):
+    def on_test_epoch_end(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
 
