@@ -590,13 +590,11 @@ def main():
         dm.setup('test')
 
         if torch.backends.mps.is_available():
-            trainer = pl.Trainer(gpus=args.num_gpus,
-                                 num_nodes=args.num_nodes,
-                                 progress_bar_refresh_rate=20,
+            trainer = pl.Trainer(num_nodes=args.num_nodes,
                                  min_epochs=1,
                                  max_epochs=2,
                                  precision=32,
-                                 strategy='ddp' if args.num_gpus > 1 else None,
+                                 strategy='auto',
                                  log_every_n_steps=9,
                                  )
         else:
