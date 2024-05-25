@@ -4,7 +4,7 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=1
+EPOCHS=5
 PREFIX=bigset79G
 BATCH_SIZE=9
 NUM_WORKERS=9
@@ -35,15 +35,3 @@ time python pad_experiments.py \
 ECODE=$?
 set +x
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py run (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
-
-
-#      --prefix $(date "+%Y%m%d_%H%M%S") \
-#      --wandb \
-#      --saved_medians \
-
-
-      #--window_len 12
-
-
-      # \
-      #--saved_medians
