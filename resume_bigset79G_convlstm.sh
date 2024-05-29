@@ -11,7 +11,7 @@ PREFIX=bigset79G
 BATCH_SIZE=9
 NUM_WORKERS=9
 
-results_path=${PREFIX}_e${EPOCHS}_bs${BATCH_SIZE}
+results_path=${PREFIX}_bs${BATCH_SIZE}
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:resuming pad_experiments.py with model $MODEL test: $PREFIX" >&2
 
