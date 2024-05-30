@@ -543,6 +543,7 @@ def main():
                                  min_epochs=1,
                                  max_epochs=max_epoch + 1,
                                  check_val_every_n_epoch=1,
+                                 log_every_n_steps=10,
                                  precision=32,
                                  callbacks=callbacks,
                                  logger=tb_logger,
