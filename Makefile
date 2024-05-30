@@ -48,10 +48,11 @@
 #
 # * Recursive self-referencing
 #
-# * Universally-available across almost every platform, inclusing the tiniest
-#   embedded shells
+# * Universally-available
 #
-# *
+#   Gnu Make runs on almost every platform, from the tiniest embedded shells,
+#   to warehouse-scale computers
+#
 #
 # ## Disadvantages
 #
@@ -60,6 +61,29 @@
 #   - Nearly all data types are strings
 #   - Some work-arounds are possible, but it becomes error-prone with
 #     increasing complexity
+#
+#
+# # Usage
+#
+# To get started, type 'make', a space, and the tab character twice
+#
+#    make <tab><tab>
+#
+# The list of available targets should appear below
+#
+# user@host -> make
+# Makefile                    run_all
+# default                     run_bigset1_convlstm
+# help                        run_bigset79G_convlstm
+# list_tests                  run_checkpoint_resume_test
+# make_split                  run_multiset_convlstm
+# metal_test                  run_overfit_convlstm
+# overfit_lstm                run_pad_convstar
+# pl_test                     run_unet
+# resume_bigset1_convlstm     show_tests
+# resume_bigset79G_convlstm   test_all
+# resume_multiset_convlstm    view_paper
+# resume_overfit_convlstm     wandb_test
 #
 
 REFS = ../references/papers
@@ -129,16 +153,17 @@ view_paper:
 #    python pad_experiments.py --train --model convlstm --parcel_loss --weighted_loss --root_path_coco <coco_folder_path> --prefix_coco <coco_file_prefix> --netcdf_path <netcdf_folder_path> --prefix <run_prefix> --num_epochs 10 --batch_size 32 --bands B02 B03 B04 B08 --saved_medians --img_size 61 61 --requires_norm --num_workers 16 --num_gpus 1 --fixed_window
 
 #
-# Calculating the number of options:
+# Calculate the number of options chaining the commands: sed, grep, and wc
+#  1. Put the command in a variable
+#  2. Echo it to stdout and the pipeline
 # ```
 # echo "$command" | sed 's/ \-/\n  -/g' | grep -- - | wc -l
 # ```
 #      17
 # _This command specifies 17 options_
 #
-# Another view of the command, to highlight the specific options used:
-
-# -> echo "python pad_experiments.py --train --model convlstm --parcel_loss --weighted_loss --root_path_coco <coco_folder_path> --prefix_coco <coco_file_prefix> --netcdf_path <netcdf_folder_path> --prefix <run_prefix> --num_epochs 10 --batch_size 32 --bands B02 B03 B04 B08 --saved_medians --img_size 61 61 --requires_norm --num_workers 16 --num_gpus 1 --fixed_window" | sed 's/ \-/\n  -/g'
+# Display with line breaks:
+#
 # python pad_experiments.py
 #  --train
 #  --model convlstm
