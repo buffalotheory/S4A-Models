@@ -113,9 +113,10 @@ DT = $(shell date "+%Y%m%d_%H%M%S")
 	view_paper
 
 # If no options are specified
-default: run_multiset_convlstm
+default: help
 
 help:
+	cat Makefile | sed -n "1,/^[^\#]/p" | sed "/^[^\#]/d"
 
 overfit_lstm:
 	make run_overfit_convlstm \
@@ -151,7 +152,6 @@ view_paper:
 # The command specified in the README:
 #
 #    python pad_experiments.py --train --model convlstm --parcel_loss --weighted_loss --root_path_coco <coco_folder_path> --prefix_coco <coco_file_prefix> --netcdf_path <netcdf_folder_path> --prefix <run_prefix> --num_epochs 10 --batch_size 32 --bands B02 B03 B04 B08 --saved_medians --img_size 61 61 --requires_norm --num_workers 16 --num_gpus 1 --fixed_window
-
 #
 # Calculate the number of options chaining the commands: sed, grep, and wc
 #  1. Put the command in a variable
