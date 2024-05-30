@@ -537,10 +537,9 @@ def main():
                                  )
             logging.debug(f"trainer loaded; trainer.num_training_batches: {trainer.num_training_batches}")
         else:
-            my_ddp = DDPPlugin(find_unused_parameters=True)
-            trainer = pl.Trainer(gpus=args.num_gpus,
+            #my_ddp = DDPPlugin(find_unused_parameters=True)
+            trainer = pl.Trainer(accelerator="gpu", devices=args.num_gpus,
                                  num_nodes=args.num_nodes,
-                                 progress_bar_refresh_rate=20,
                                  min_epochs=1,
                                  max_epochs=max_epoch + 1,
                                  check_val_every_n_epoch=1,
@@ -549,10 +548,8 @@ def main():
                                  logger=tb_logger,
                                  gradient_clip_val=10.0,
                                  # early_stop_callback=early_stopping,
-                                 checkpoint_callback=True,
-                                 resume_from_checkpoint=resume_from_checkpoint,
                                  fast_dev_run=args.devtest,
-                                 strategy='ddp' if args.num_gpus > 1 else None,
+                                 strategy='ddp_find_unused_parameters_true'
                                  )
 
         # Train model
@@ -602,7 +599,7 @@ def main():
                                  log_every_n_steps=9,
                                  )
         else:
-            my_ddp = DDPPlugin(find_unused_parameters=True)
+            #my_ddp = DDPPlugin(find_unused_parameters=True)
             trainer = pl.Trainer(gpus=args.num_gpus,
                                  num_nodes=args.num_nodes,
                                  progress_bar_refresh_rate=20,
