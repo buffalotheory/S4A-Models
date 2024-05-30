@@ -177,10 +177,10 @@ class ConvLSTM(pl.LightningModule):
         self.limit_test_batches = 2
         self.max_batches = 4
         self.log_every_n_steps = 4
+        self.wandb = wandb
 
         super(ConvLSTM, self).__init__()
 
-        self.wandb = wandb
         self.linear_encoder = linear_encoder
         self.parcel_loss = parcel_loss
 
@@ -393,8 +393,8 @@ class ConvLSTM(pl.LightningModule):
         loss_aver = loss.item() * inputs.shape[0]
 
         self.epoch_train_losses.append(loss_aver)
-        if self.wandb:
-            wandb.log({"loss": loss_aver})
+        #if self.wandb:
+        #    wandb.log({"loss": loss_aver})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
