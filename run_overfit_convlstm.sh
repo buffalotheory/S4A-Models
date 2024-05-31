@@ -33,9 +33,9 @@ cd /app/S4A-Models \
       --num_workers $NUM_WORKERS \
       --num_gpus 2 \
       --fixed_window \
-
-#      --wandb \
+      --wandb \
 
 ECODE=$?
 set +x
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py run (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
+exit $ECODE
