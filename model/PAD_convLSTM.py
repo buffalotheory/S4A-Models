@@ -18,6 +18,8 @@ import copy
 from pathlib import Path
 import pickle
 
+import torchmetrics
+
 import torch
 import torch.nn as nn
 from torch.optim import lr_scheduler
@@ -191,7 +193,9 @@ class ConvLSTM(pl.LightningModule):
         self.best_loss = None
 
         num_discrete_labels = len(set(linear_encoder.values()))
+        logging.info(f'num_discrete_labels: {num_discrete_labels}')
         self.confusion_matrix = torch.zeros([num_discrete_labels, num_discrete_labels])
+        self.accuracy = torchmetrics.classification.Accuracy(task='multiclass', num_classes=num_discrete_labels)
 
         self.class_weights = class_weights
         self.checkpoint_epoch = checkpoint_epoch
@@ -361,6 +365,7 @@ class ConvLSTM(pl.LightningModule):
         label = label.to(torch.long)
 
         pred = self(inputs)  # (B, K, H, W)
+        logging.info(f'pred shape: {pred.shape}')
 
         if self.parcel_loss:
             parcels = batch['parcels']  # (B, H, W)
@@ -388,6 +393,9 @@ class ConvLSTM(pl.LightningModule):
             loss = loss / parcels.sum()
         else:
             loss = self.lossfunction(pred, label)
+
+        self.accuracy(pred, label)
+        self.log('train_acc_step', self.accuracy)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
@@ -430,6 +438,7 @@ class ConvLSTM(pl.LightningModule):
             pred_masked[~mask_K] = 0
 
             label = label_masked.clone()
+            logging.info(f'label shape: {label.shape}')
             pred = pred_masked.clone()
 
             loss = self.lossfunction(pred, label)
@@ -437,6 +446,9 @@ class ConvLSTM(pl.LightningModule):
             loss = loss / parcels.sum()
         else:
             loss = self.lossfunction(pred, label)
+
+        self.accuracy(pred, label)
+        self.log('val_acc_step', self.accuracy)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
@@ -500,6 +512,8 @@ class ConvLSTM(pl.LightningModule):
         # Clear list to track next epoch
         self.epoch_train_losses = []
 
+        self.log('train_acc_epoch', self.accuracy)
+
 
     def on_validation_epoch_end(self):
         # Calculate average loss over an epoch
@@ -513,6 +527,8 @@ class ConvLSTM(pl.LightningModule):
 
         # Clear list to track next epoch
         self.epoch_valid_losses = []
+
+        self.log('val_acc_epoch', self.accuracy)
 
 
     def on_test_epoch_end(self):
