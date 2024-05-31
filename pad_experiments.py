@@ -544,7 +544,7 @@ def main():
                                  max_epochs=max_epoch + 1,
                                  check_val_every_n_epoch=1,
                                  log_every_n_steps=10,
-                                 precision=32,
+                                 precision="bf16-mixed",
                                  callbacks=callbacks,
                                  logger=tb_logger,
                                  gradient_clip_val=10.0,
