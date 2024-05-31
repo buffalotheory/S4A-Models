@@ -4,23 +4,26 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=5
+EPOCHS=20
 PREFIX=bigset79G
 BATCH_SIZE=9
-NUM_WORKERS=9
+NUM_WORKERS=24
 
-results_path=${PREFIX}_bs${BATCH_SIZE}
+[[ "$1" == '-e' ]] && EPOCHS=$2
+
+results_path=${PREFIX}
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2
 
-time python pad_experiments.py \
+cd /app/S4A-Models \
+&& time python pad_experiments.py \
       --train \
       --model $MODEL \
       --parcel_loss \
       --weighted_loss \
-      --root_path_coco coco_files/ \
+      --root_path_coco /app/S4A-Models/coco_files/ \
       --prefix_coco $PREFIX \
-      --netcdf_path ../dataset/ \
+      --netcdf_path /app/dataset/ \
       --prefix ${results_path} \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
@@ -30,7 +33,7 @@ time python pad_experiments.py \
       --num_workers $NUM_WORKERS \
       --num_gpus 1 \
       --fixed_window \
-      --wandb
+      --wandb \
 
 ECODE=$?
 set +x
