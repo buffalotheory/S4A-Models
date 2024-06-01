@@ -459,6 +459,9 @@ class ConvLSTM(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx):
+        self.accumulate_results(batch, batch_idx):
+
+    def accumulate_results(self, batch, batch_idx):
         inputs = batch['medians']  # (B, T, C, H, W)
 
         label = batch['labels'].to(torch.long)  # (B, H, W)
@@ -470,8 +473,6 @@ class ConvLSTM(pl.LightningModule):
 
         # Clip predictions larger than the maximum possible label
         pred = torch.clamp(pred, 0, max(self.linear_encoder.values()))
-
-        logging.info(f'inputs shape: {inputs.shape}, label shape: {label.shape}, pred shape: {pred.shape}')
 
         if self.parcel_loss:
             parcels = batch['parcels']  # (B, H, W)
@@ -491,6 +492,8 @@ class ConvLSTM(pl.LightningModule):
             #bins = np.arange(-0.5, sorted(list(self.linear_encoder.values()))[-1] + 0.5, 1)
             #bins_idx = torch.bucketize(pred, torch.tensor(bins).cuda())
             #pred_disc = bins_idx - 1
+
+        logging.info(f'batch_idx: {batch_idx}: inputs {inputs.shape}, labels: {label.shape}, preds: {pred.shape}, conf_mat: {self.confusion_matrix.shape}')
 
         for i in range(label.shape[0]):
             self.confusion_matrix[label[i], pred[i]] += 1
@@ -534,6 +537,10 @@ class ConvLSTM(pl.LightningModule):
 
 
     def on_test_epoch_end(self):
+        self.calculate_accuracy()
+
+
+    def calculate_accuracy(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
         logging.info(f'called confusion matrix; shape: {self.confusion_matrix.shape}')
