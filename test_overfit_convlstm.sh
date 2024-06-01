@@ -1,17 +1,15 @@
 #!/bin/bash
 # Bryant Hansen
 
-# Launch the convLSTM test with the overfit dataset
+# Execute the test of convLSTM with the overfit dataset
 
 set -x
 
 MODEL=convlstm
-EPOCHS=10
+EPOCHS=5
 PREFIX=overfit
-BATCH_SIZE=4
-NUM_WORKERS=16
-
-[[ "$1" == '-e' ]] && EPOCHS=$2
+BATCH_SIZE=9
+NUM_WORKERS=9
 
 RESULTS_PATH=${PREFIX}
 MODEL_PATH=/app/S4A-Models/
@@ -29,7 +27,6 @@ echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with 
 
 cd $MODEL_PATH \
 && time python pad_experiments.py \
-      --train \
       --model $MODEL \
       --parcel_loss \
       --weighted_loss \
@@ -45,10 +42,8 @@ cd $MODEL_PATH \
       --num_workers $NUM_WORKERS \
       --num_gpus 2 \
       --fixed_window \
-
-#      --wandb \
+      --load_checkpoint=last
 
 ECODE=$?
 set +x
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:pad_experiments.py run (${MODEL} / ${PREFIX}) exited with ECODE $ECODE" >&2
-exit $ECODE
