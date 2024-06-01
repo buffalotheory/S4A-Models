@@ -10,6 +10,7 @@ EPOCHS=10
 PREFIX=overfit
 BATCH_SIZE=4
 NUM_WORKERS=16
+GPUS=2
 
 [[ "$1" == '-e' ]] && EPOCHS=$2
 
@@ -25,7 +26,7 @@ CONF=${ME%.sh}.conf
 [[ ! -f "$CONF_DIR"/"$CONF" ]] || . "$CONF_DIR"/"$CONF"
 [[ ! -f "$CONF" ]]             || . "$CONF"
 
-echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${RESULTS_PATH}" >&2
 
 cd $MODEL_PATH \
 && time python pad_experiments.py \
@@ -43,7 +44,7 @@ cd $MODEL_PATH \
       --img_size 61 61 \
       --requires_norm \
       --num_workers $NUM_WORKERS \
-      --num_gpus 2 \
+      --num_gpus $GPUS \
       --fixed_window \
 
 #      --wandb \

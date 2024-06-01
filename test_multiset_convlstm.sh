@@ -26,12 +26,14 @@ CONF=${ME%.sh}.conf
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2
 
-last_checkpoint_file="$(ls -1t ${MODEL_PATH}/logs/convlstm/overfit/run_*/checkpoints/*.ckpt | head -n 1)"
+last_checkpoint_file="$(ls -1t ${MODEL_PATH}/logs/${MODEL}/${PREFIX}/run_*/checkpoints/*.ckpt | head -n 1)"
 echo "last_checkpoint_file: $last_checkpoint_file" >&2
+
+set -e
+[[ -f "$last_checkpoint_file" ]]
 
 cd $MODEL_PATH \
 && time python pad_experiments.py \
-time python pad_experiments.py \
       --model $MODEL \
       --parcel_loss \
       --weighted_loss \
