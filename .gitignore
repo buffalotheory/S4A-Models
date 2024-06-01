@@ -16,3 +16,4 @@ models/__pycache__
 
 /.archive/
 /nohup.out
+/wandb/
