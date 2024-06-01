@@ -1,0 +1,14 @@
+# Test conf file
+
+
+MODEL=convlstm
+EPOCHS=7
+PREFIX=overfit
+BATCH_SIZE=4
+NUM_WORKERS=16
+
+RESULTS_PATH=${PREFIX}
+MODEL_PATH=/app/S4A-Models/
+DATASET_PATH=/app/dataset/
+COCO_PATH=${MODEL_PATH}/coco_files/
+CONF_DIR=${MODEL_PATH}/conf/

@@ -19,6 +19,7 @@ CONF_DIR=${MODEL_PATH}/conf/
 
 ME=$(basename $0)
 CONF=${ME%.sh}.conf
+[[ ! -f "$CONF_DIR"/s4a.conf ]] || . "$CONF_DIR"/s4a.conf
 [[ ! -f "$CONF_DIR"/"$CONF" ]] || . "$CONF_DIR"/"$CONF"
 [[ ! -f "$CONF" ]]             || . "$CONF"
 
