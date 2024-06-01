@@ -11,20 +11,29 @@ NUM_WORKERS=16
 
 [[ "$1" == '-e' ]] && EPOCHS=$2
 
-results_path=${PREFIX}_bs${BATCH_SIZE}
+RESULTS_PATH=${PREFIX}
+MODEL_PATH=/app/S4A-Models/
+DATASET_PATH=/app/dataset/
+COCO_PATH=${MODEL_PATH}/coco_files/
+CONF_DIR=${MODEL_PATH}/conf/
+
+ME=$(basename $0)
+CONF=${ME%.sh}.conf
+[[ ! -f "$CONF_DIR"/"$CONF" ]] || . "$CONF_DIR"/"$CONF"
+[[ ! -f "$CONF" ]]             || . "$CONF"
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2
 
-cd /app/S4A-Models \
+cd $MODEL_PATH \
 && time python pad_experiments.py \
       --train \
       --model $MODEL \
       --parcel_loss \
       --weighted_loss \
-      --root_path_coco /app/S4A-Models/coco_files/ \
+      --root_path_coco $COCO_PATH \
       --prefix_coco $PREFIX \
-      --netcdf_path /app/dataset/ \
-      --prefix ${results_path} \
+      --netcdf_path $DATASET_PATH \
+      --prefix $RESULTS_PATH \
       --num_epochs $EPOCHS \
       --batch_size $BATCH_SIZE \
       --bands B02 B03 B04 B08 \
@@ -33,7 +42,8 @@ cd /app/S4A-Models \
       --num_workers $NUM_WORKERS \
       --num_gpus 2 \
       --fixed_window \
-      --wandb \
+
+#      --wandb \
 
 ECODE=$?
 set +x
