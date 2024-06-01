@@ -534,7 +534,7 @@ class ConvLSTM(pl.LightningModule):
     def on_test_epoch_end(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
-        logging.info(f'called confusion matrix')
+        logging.info(f'called confusion matrix; shape: {self.confusion_matrix.shape}')
 
         self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label
 
@@ -543,7 +543,7 @@ class ConvLSTM(pl.LightningModule):
         fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
         tp = np.diag(self.confusion_matrix)
         tn = self.confusion_matrix.sum() - (fp + fn + tp)
-        logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
+        logging.info(f'\n   fp: {fp}\n   fn: {fn}\n   tp: {tp}\n   tn: {tn}')
 
         # Sensitivity, hit rate, recall, or true positive rate
         tpr = tp / (tp + fn)
