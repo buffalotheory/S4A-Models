@@ -546,7 +546,7 @@ class PADDataset(Dataset):
                     # Return requested sub-patch
                     medians = medians[subpatch_id]
                     labels = labels[subpatch_id]
-                print(f'calculated {num_subpatches_h * num_subpatches_w} new medians and labels for {block_dir} (triggered by subpatch {subpatch_id}): medians shape: {medians.shape}, labels.shape: {labels.shape}')
+                logging.info(f'calculated {num_subpatches_h * num_subpatches_w} new medians and labels for {block_dir} (triggered by subpatch {subpatch_id}): medians shape: {medians.shape}, labels.shape: {labels.shape}')
 
         # Normalize data to range [0-1]
         if self.requires_norm:
