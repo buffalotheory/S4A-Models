@@ -60,6 +60,7 @@ def resume_or_start(results_path, resume, train, num_epochs, load_checkpoint):
 
     if not train:
         # Load the given checkpoint to test with
+        logging.info(f'run_path: {Path(load_checkpoint).parent.parent}, load_checkpoint.stem: {Path(load_checkpoint).stem}')
         load_checkpoint = Path(load_checkpoint)
         run_path = load_checkpoint.parent.parent
         init_epoch = int(load_checkpoint.stem.split('=')[1].split('-')[0])
@@ -601,13 +602,13 @@ def main():
                                  )
         else:
             #my_ddp = DDPPlugin(find_unused_parameters=True)
-            trainer = pl.Trainer(gpus=args.num_gpus,
+            trainer = pl.Trainer(accelerator="gpu",
+                                 devices=args.num_gpus,
                                  num_nodes=args.num_nodes,
-                                 progress_bar_refresh_rate=20,
                                  min_epochs=1,
                                  max_epochs=2,
-                                 precision=32,
-                                 strategy='ddp' if args.num_gpus > 1 else None,
+                                 precision="bf16-mixed",
+                                 strategy='ddp_find_unused_parameters_true'
                                  )
 
         # Test model

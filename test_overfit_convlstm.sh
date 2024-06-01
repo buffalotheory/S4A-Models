@@ -10,6 +10,7 @@ EPOCHS=5
 PREFIX=overfit
 BATCH_SIZE=9
 NUM_WORKERS=9
+GPUS=2
 
 RESULTS_PATH=${PREFIX}
 MODEL_PATH=/app/S4A-Models/
@@ -24,6 +25,9 @@ CONF=${ME%.sh}.conf
 [[ ! -f "$CONF" ]]             || . "$CONF"
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${results_path}" >&2
+
+last_checkpoint_file="$(ls -1t ${MODEL_PATH}/logs/convlstm/overfit/run_*/checkpoints/*.ckpt | head -n 1)"
+echo "last_checkpoint_file: $last_checkpoint_file" >&2
 
 cd $MODEL_PATH \
 && time python pad_experiments.py \
@@ -40,9 +44,9 @@ cd $MODEL_PATH \
       --img_size 61 61 \
       --requires_norm \
       --num_workers $NUM_WORKERS \
-      --num_gpus 2 \
+      --num_gpus $GPUS \
       --fixed_window \
-      --load_checkpoint=last
+      --load_checkpoint "$last_checkpoint_file"
 
 ECODE=$?
 set +x
