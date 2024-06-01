@@ -471,6 +471,8 @@ class ConvLSTM(pl.LightningModule):
         # Clip predictions larger than the maximum possible label
         pred = torch.clamp(pred, 0, max(self.linear_encoder.values()))
 
+        logging.info(f'inputs shape: {inputs.shape}, label shape: {label.shape}, pred shape: {pred.shape}')
+
         if self.parcel_loss:
             parcels = batch['parcels']  # (B, H, W)
             parcels_K = parcels[:, None, :, :].repeat(1, pred.size(1), 1, 1)  # (B, K, H, W)
@@ -543,7 +545,19 @@ class ConvLSTM(pl.LightningModule):
         fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
         tp = np.diag(self.confusion_matrix)
         tn = self.confusion_matrix.sum() - (fp + fn + tp)
-        logging.info(f'\n   fp: {fp}\n   fn: {fn}\n   tp: {tp}\n   tn: {tn}')
+        # Calculate metrics and confusion matrix
+        fp = self.confusion_matrix.sum(axis=0) - np.diag(self.confusion_matrix)
+        fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
+        tp = np.diag(self.confusion_matrix)
+        tn = self.confusion_matrix.sum() - (fp + fn + tp)
+        #logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
+
+        np.set_printoptions(formatter={'float': '{: 6.0f}'.format}, linewidth=120)
+        print(f'confusion matrix:\n{self.confusion_matrix}\n')
+        print(f' fp: {fp}')
+        print(f' fn: {fn}')
+        print(f' tp: {tp}')
+        print(f' tn: {tn}')
 
         # Sensitivity, hit rate, recall, or true positive rate
         tpr = tp / (tp + fn)
@@ -561,10 +575,20 @@ class ConvLSTM(pl.LightningModule):
         fdr = fp / (tp + fp)
         # F1-score
         f1 = (2 * ppv * tpr) / (ppv + tpr)
-        logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
+
+        np.set_printoptions(formatter={'float': '{: 6.3f}'.format}, linewidth=120)
+        print(f'tpr: {tpr}')
+        print(f'tnr: {tnr}')
+        print(f'ppv: {ppv}')
+        print(f'npv: {npv}')
+        print(f'fpr: {fpr}')
+        print(f'fnr: {fnr}')
+        print(f'fdr: {fdr}')
+        print(f' f1: {f1}')
 
         # Overall accuracy
         accuracy = (tp + tn) / (tp + fp + fn + tn)
+        print(f'accuracy: {accuracy}')
 
         # Export metrics in text file
         metrics_file = self.run_path / f"evaluation_metrics_epoch{self.checkpoint_epoch}.csv"
