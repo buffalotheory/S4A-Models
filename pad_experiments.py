@@ -324,6 +324,8 @@ def main():
             logging.info(f'loading ConvLSTM from checkpoint file {resume_from_checkpoint}')
             model = ConvLSTM.load_from_checkpoint(resume_from_checkpoint, checkpoint_epoch=init_epoch)
         else:
+            crops = [f'({k})' for k in sorted(LINEAR_ENCODER.keys()) if k != 0]
+            logging.info(f"crops: {crops}")
             model = ConvLSTM(run_path, LINEAR_ENCODER, parcel_loss=args.parcel_loss,
                              class_weights=class_weights,
                              wandb=args.wandb)
@@ -545,7 +547,7 @@ def main():
                                  max_epochs=max_epoch + 1,
                                  check_val_every_n_epoch=1,
                                  log_every_n_steps=10,
-                                 precision="bf16-mixed",
+                                 precision=32,
                                  callbacks=callbacks,
                                  logger=tb_logger,
                                  gradient_clip_val=10.0,

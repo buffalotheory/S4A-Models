@@ -402,13 +402,13 @@ class ConvLSTM(pl.LightningModule):
             loss = loss / parcels.sum()
 
             #logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label)}')
-            logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label.cpu().detach())}, label dtype: {label.dtype}')
-            logging.info(f'label sample: {label[0,0,:]}')
-            logging.info(f'pred shape: {pred.shape}, pred non-zero: {np.count_nonzero(pred.cpu().detach())}, pred.dtype: {pred.dtype}')
-            logging.info(f'pred sample: {pred[0,0,0,:]}')
+            logging.debug(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label.cpu().detach())}, label dtype: {label.dtype}')
+            logging.debug(f'label sample: {label[0,0,:]}')
+            logging.debug(f'pred shape: {pred.shape}, pred non-zero: {np.count_nonzero(pred.cpu().detach())}, pred.dtype: {pred.dtype}')
+            logging.debug(f'pred sample: {pred[0,0,0,:]}')
             winners = pred.argmax(dim=1)
-            logging.info(f'winners shape: {winners.shape}, winners non-zero: {np.count_nonzero(winners.cpu().detach())}, winners.dtype: {winners.dtype}')
-            logging.info(f'winners sample: {winners[0,0,:]}')
+            logging.debug(f'winners shape: {winners.shape}, winners non-zero: {np.count_nonzero(winners.cpu().detach())}, winners.dtype: {winners.dtype}')
+            logging.debug(f'winners sample: {winners[0,0,:]}')
             correct = (label != 0) & (label == winners)
             incorrect = (label != 0) & (label != winners)
             logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
@@ -424,6 +424,7 @@ class ConvLSTM(pl.LightningModule):
             logging.info(f'train step: loss: {loss}, accuracy: {acc}')
 
         else:
+            acc = None
             loss = self.lossfunction(pred, label)
 
         # Compute total loss for current batch
@@ -437,7 +438,7 @@ class ConvLSTM(pl.LightningModule):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
 
-        logging.info(f'label dtype: {label.dtype}, label.shape: {label.shape}, label[0]: {label[0]}')
+        logging.debug(f'label dtype: {label.dtype}, label.shape: {label.shape}, label[0]: {label[0]}')
         for i in range(label.shape[0]):
             l = label[i].cpu().detach().to(torch.long)
             p = pred[i].cpu().detach().to(torch.long)
@@ -445,7 +446,7 @@ class ConvLSTM(pl.LightningModule):
 
         np.set_printoptions(formatter={'float': '{: 6.0f}'.format})
         #print(f'confusion matrix:\n{self.confusion_matrix}\n')
-        return {'loss': loss}
+        return {'loss': loss, 'accuracy': acc}
 
 
     def validation_step(self, batch, batch_idx):
@@ -481,11 +482,28 @@ class ConvLSTM(pl.LightningModule):
             loss = self.lossfunction(pred, label)
 
             loss = loss / parcels.sum()
+
+            winners = pred.argmax(dim=1)
+            correct = (label != 0) & (label == winners)
+            incorrect = (label != 0) & (label != winners)
+            logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
+            logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
+            #acc = self.accuracy(pred, label, average='weighted')
+            ncorrect = np.count_nonzero(correct.cpu().detach())
+            nincorrect = np.count_nonzero(incorrect.cpu().detach())
+            acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
+            #acc = self.accuracy(pred, label)
+
+            self.log('val_acc_step', acc)
+
+            logging.info(f'val step: loss: {loss}, accuracy: {acc}')
+
         else:
+            acc = None
             loss = self.lossfunction(pred, label)
 
-        self.accuracy(pred, label)
-        self.log('val_acc_step', self.accuracy)
+        acc2 = self.accuracy(pred, label)
+        self.log('val_acc_step', acc)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
