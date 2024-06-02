@@ -494,6 +494,7 @@ class ConvLSTM(pl.LightningModule):
             #pred_disc = bins_idx - 1
 
         logging.info(f'batch_idx: {batch_idx}: inputs {inputs.shape}, labels: {label.shape}, preds: {pred.shape}, conf_mat: {self.confusion_matrix.shape}')
+        logging.info(f'batch_idx: {batch_idx}: label.shape[0]: {label.shape[0]}')
 
         for i in range(label.shape[0]):
             self.confusion_matrix[label[i], pred[i]] += 1
@@ -543,7 +544,7 @@ class ConvLSTM(pl.LightningModule):
     def calculate_accuracy(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
-        logging.info(f'called confusion matrix; shape: {self.confusion_matrix.shape}')
+        logging.info(f'fetched confusion matrix; shape: {self.confusion_matrix.shape}')
 
         self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label
 
