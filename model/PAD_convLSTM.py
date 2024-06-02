@@ -459,7 +459,7 @@ class ConvLSTM(pl.LightningModule):
 
 
     def test_step(self, batch, batch_idx):
-        self.accumulate_results(batch, batch_idx):
+        self.accumulate_results(batch, batch_idx)
 
     def accumulate_results(self, batch, batch_idx):
         inputs = batch['medians']  # (B, T, C, H, W)
