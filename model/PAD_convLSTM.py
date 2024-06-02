@@ -193,6 +193,7 @@ class ConvLSTM(pl.LightningModule):
         self.best_loss = None
 
         num_discrete_labels = len(set(linear_encoder.values()))
+        self.num_discrete_labels = num_discrete_labels
         logging.info(f'num_discrete_labels: {num_discrete_labels}')
         self.confusion_matrix = torch.zeros([num_discrete_labels, num_discrete_labels])
         self.accuracy = torchmetrics.classification.Accuracy(task='multiclass', num_classes=num_discrete_labels)
@@ -201,6 +202,7 @@ class ConvLSTM(pl.LightningModule):
         self.checkpoint_epoch = checkpoint_epoch
 
         if class_weights is not None:
+            logging.info(f'class weights: {class_weights}')
             if torch.backends.mps.is_available():
                 logging.debug(f'setting mps device')
                 self.mps_device = torch.device("mps")
@@ -369,7 +371,9 @@ class ConvLSTM(pl.LightningModule):
 
         if self.parcel_loss:
             parcels = batch['parcels']  # (B, H, W)
+            #print(f'\nparcels[0]:\n{parcels[0]}')
             parcels_K = parcels[:, None, :, :].repeat(1, pred.size(1), 1, 1)  # (B, K, H, W)
+            logging.info(f'parcels shape: {parcels.shape}, parcel true: {parcels.sum()}, parcels_K.shape: {parcels_K.shape}')
 
             # Note: a new masked array must be created in order to avoid inplace
             # operations on the label/pred variables. Otherwise the optimizer
@@ -378,24 +382,49 @@ class ConvLSTM(pl.LightningModule):
 
             mask = (parcels) & (label != 0)
             mask_K = (parcels_K) & (label[:, None, :, :].repeat(1, pred.size(1), 1, 1) != 0)
+            logging.info(f'mask shape: {mask.shape}, mask true: {mask.sum()}, mask_K.shape: {mask_K.shape}')
 
             label_masked = label.clone()
             label_masked[~mask] = 0
+            #logging.info(f'label_masked shape: {label_masked.shape}, label_masked non-zero: {np.count_nonzero(label_masked)}')
 
             pred_masked = pred.clone()
             pred_masked[~mask_K] = 0
 
             label = label_masked.clone()
+            np.set_printoptions(formatter={'float': '{: 3.0f}'.format})
+            #print(f'\nlabel[0]:\n{label[0]}')
+
             pred = pred_masked.clone()
 
             loss = self.lossfunction(pred, label)
 
             loss = loss / parcels.sum()
+
+            #logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label)}')
+            logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label.cpu().detach())}, label dtype: {label.dtype}')
+            logging.info(f'label sample: {label[0,0,:]}')
+            logging.info(f'pred shape: {pred.shape}, pred non-zero: {np.count_nonzero(pred.cpu().detach())}, pred.dtype: {pred.dtype}')
+            logging.info(f'pred sample: {pred[0,0,0,:]}')
+            winners = pred.argmax(dim=1)
+            logging.info(f'winners shape: {winners.shape}, winners non-zero: {np.count_nonzero(winners.cpu().detach())}, winners.dtype: {winners.dtype}')
+            logging.info(f'winners sample: {winners[0,0,:]}')
+            correct = (label != 0) & (label == winners)
+            incorrect = (label != 0) & (label != winners)
+            logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
+            logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
+            #acc = self.accuracy(pred, label, average='weighted')
+            ncorrect = np.count_nonzero(correct.cpu().detach())
+            nincorrect = np.count_nonzero(incorrect.cpu().detach())
+            acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
+            #acc = self.accuracy(pred, label)
+
+            self.log('train_acc_step', acc)
+
+            logging.info(f'train step: loss: {loss}, accuracy: {acc}')
+
         else:
             loss = self.lossfunction(pred, label)
-
-        self.accuracy(pred, label)
-        self.log('train_acc_step', self.accuracy)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
@@ -408,6 +437,14 @@ class ConvLSTM(pl.LightningModule):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
 
+        logging.info(f'label dtype: {label.dtype}, label.shape: {label.shape}, label[0]: {label[0]}')
+        for i in range(label.shape[0]):
+            l = label[i].cpu().detach().to(torch.long)
+            p = pred[i].cpu().detach().to(torch.long)
+            self.confusion_matrix[l,p] += 1
+
+        np.set_printoptions(formatter={'float': '{: 6.0f}'.format})
+        #print(f'confusion matrix:\n{self.confusion_matrix}\n')
         return {'loss': loss}
 
 
@@ -455,6 +492,9 @@ class ConvLSTM(pl.LightningModule):
 
         self.epoch_valid_losses.append(loss_aver)
 
+        #for i in range(label.shape[0]):
+        #    self.confusion_matrix[label[i], pred[i]] += 1
+
         return {'val_loss': loss}
 
 
@@ -465,6 +505,13 @@ class ConvLSTM(pl.LightningModule):
         inputs = batch['medians']  # (B, T, C, H, W)
 
         label = batch['labels'].to(torch.long)  # (B, H, W)
+        #logging.info(f'batch_idx: {batch_idx}: label.shape[0]: {label.shape[0]}; unique labels in 0: {np.unique(label[0])}')
+        #labels = np.delete(np.unique(label[0].cpu()), np.where(label==0))
+        #logging.info(f'batch_idx: {batch_idx}: label_shape: {label.shape}, label.shape[0]: {label.shape[0]}; unique labels in 0: {labels}')
+        #logging.info(f'batch_idx: {batch_idx}: label_shape: {label.shape}, label.shape[0]: {label.shape[0]}; unique labels in 0: {np.unique(label[0].cpu())}')
+        labels = np.unique(label[0].cpu())
+        labels2 = np.delete(labels, np.where(labels == 0))
+        logging.info(f'batch_idx: {batch_idx}: label_shape: {label.shape}, label.shape[0]: {label.shape[0]}; unique labels in 0: {labels2}')
 
         pred = self(inputs).to(torch.long)  # (B, K, H, W)
 
@@ -494,7 +541,6 @@ class ConvLSTM(pl.LightningModule):
             #pred_disc = bins_idx - 1
 
         logging.info(f'batch_idx: {batch_idx}: inputs {inputs.shape}, labels: {label.shape}, preds: {pred.shape}, conf_mat: {self.confusion_matrix.shape}')
-        logging.info(f'batch_idx: {batch_idx}: label.shape[0]: {label.shape[0]}; unique labels in 0: {np.unique(label[0])}')
 
         for i in range(label.shape[0]):
             self.confusion_matrix[label[i], pred[i]] += 1
@@ -519,6 +565,9 @@ class ConvLSTM(pl.LightningModule):
         self.epoch_train_losses = []
 
         self.log('train_acc_epoch', self.accuracy)
+        acc = self.calculate_accuracy()
+        logging.info(f'accuracy: {acc}')
+        #self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
     def on_validation_epoch_end(self):
@@ -535,13 +584,10 @@ class ConvLSTM(pl.LightningModule):
         self.epoch_valid_losses = []
 
         self.log('val_acc_epoch', self.accuracy)
+        self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
     def on_test_epoch_end(self):
-        self.calculate_accuracy()
-
-
-    def calculate_accuracy(self):
         logging.info(f'calculating accuracy')
         self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
         logging.info(f'fetched confusion matrix; shape: {self.confusion_matrix.shape}')
@@ -738,3 +784,62 @@ class ConvLSTM(pl.LightningModule):
 
         np.save(self.run_path / f'cm_norm_epoch{self.checkpoint_epoch}.npy', self.confusion_matrix)
         pickle.dump(self.linear_encoder, open(self.run_path / f'linear_encoder_epoch{self.checkpoint_epoch}.pkl', 'wb'))
+
+
+    def calculate_accuracy(self):
+        logging.info(f'calculating accuracy')
+        self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
+        logging.info(f'fetched confusion matrix; shape: {self.confusion_matrix.shape}')
+
+        self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label
+
+        # Calculate metrics and confusion matrix
+        fp = self.confusion_matrix.sum(axis=0) - np.diag(self.confusion_matrix)
+        fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
+        tp = np.diag(self.confusion_matrix)
+        tn = self.confusion_matrix.sum() - (fp + fn + tp)
+        # Calculate metrics and confusion matrix
+        fp = self.confusion_matrix.sum(axis=0) - np.diag(self.confusion_matrix)
+        fn = self.confusion_matrix.sum(axis=1) - np.diag(self.confusion_matrix)
+        tp = np.diag(self.confusion_matrix)
+        tn = self.confusion_matrix.sum() - (fp + fn + tp)
+        #logging.info(f'fp: {fp}, fn: {fn}, tp: {tp}, tn: {tn}')
+
+        np.set_printoptions(formatter={'float': '{: 6.0f}'.format}, linewidth=120)
+        print(f'confusion matrix:\n{self.confusion_matrix}\n')
+        print(f' fp: {fp}')
+        print(f' fn: {fn}')
+        print(f' tp: {tp}')
+        print(f' tn: {tn}')
+
+        # Sensitivity, hit rate, recall, or true positive rate
+        tpr = tp / (tp + fn)
+        # Specificity or true negative rate
+        tnr = tn / (tn + fp)
+        # Precision or positive predictive value
+        ppv = tp / (tp + fp)
+        # Negative predictive value
+        npv = tn / (tn + fn)
+        # Fall out or false positive rate
+        fpr = fp / (fp + tn)
+        # False negative rate
+        fnr = fn / (tp + fn)
+        # False discovery rate
+        fdr = fp / (tp + fp)
+        # F1-score
+        f1 = (2 * ppv * tpr) / (ppv + tpr)
+
+        np.set_printoptions(formatter={'float': '{: 6.3f}'.format}, linewidth=120)
+        print(f'tpr: {tpr}')
+        print(f'tnr: {tnr}')
+        print(f'ppv: {ppv}')
+        print(f'npv: {npv}')
+        print(f'fpr: {fpr}')
+        print(f'fnr: {fnr}')
+        print(f'fdr: {fdr}')
+        print(f' f1: {f1}')
+
+        # Overall accuracy
+        accuracy = (tp + tn) / (tp + fp + fn + tn)
+        print(f'accuracy: {accuracy}')
+        return accuracy
