@@ -6,7 +6,7 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=10
+EPOCHS=20
 PREFIX=multiset
 BATCH_SIZE=4
 NUM_WORKERS=16

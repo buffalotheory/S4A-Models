@@ -196,7 +196,8 @@ class ConvLSTM(pl.LightningModule):
         self.num_discrete_labels = num_discrete_labels
         logging.info(f'num_discrete_labels: {num_discrete_labels}')
         self.confusion_matrix = torch.zeros([num_discrete_labels, num_discrete_labels])
-        self.accuracy = torchmetrics.classification.Accuracy(task='multiclass', num_classes=num_discrete_labels)
+        self.train_acc = torchmetrics.classification.Accuracy(task='multiclass', num_classes=num_discrete_labels)
+        self.valid_acc = torchmetrics.classification.Accuracy(task='multiclass', num_classes=num_discrete_labels)
 
         self.class_weights = class_weights
         self.checkpoint_epoch = checkpoint_epoch
@@ -431,8 +432,8 @@ class ConvLSTM(pl.LightningModule):
         loss_aver = loss.item() * inputs.shape[0]
 
         self.epoch_train_losses.append(loss_aver)
-        #if self.wandb:
-        #    wandb.log({"loss": loss_aver})
+        if self.wandb:
+            wandb.log({"loss": loss_aver, "accuracy": self.accuracy})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
@@ -538,6 +539,9 @@ class ConvLSTM(pl.LightningModule):
 
         # Clip predictions larger than the maximum possible label
         pred = torch.clamp(pred, 0, max(self.linear_encoder.values()))
+
+        logging.info(f'inputs shape: {inputs.shape}, label shape: {label.shape}, pred shape: {pred.shape}')
+        print(f'inputs shape: {inputs.shape}, label shape: {label.shape}, pred shape: {pred.shape}')
 
         if self.parcel_loss:
             parcels = batch['parcels']  # (B, H, W)
