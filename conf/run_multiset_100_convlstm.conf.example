@@ -1,0 +1,6 @@
+MODEL_PATH=.
+DATASET_PATH=../dataset_100/
+COCO_PATH=${MODEL_PATH}/coco_files/
+CONF_DIR=${MODEL_PATH}//conf/
+EPOCHS=5
+
