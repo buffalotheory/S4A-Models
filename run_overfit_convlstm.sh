@@ -9,22 +9,23 @@ MODEL=convlstm
 EPOCHS=10
 PREFIX=overfit
 BATCH_SIZE=4
-NUM_WORKERS=16
+NUM_WORKERS=8
 GPUS=1
 
-[[ "$1" == '-e' ]] && EPOCHS=$2
+CONF_DIR=./conf/
 
 RESULTS_PATH=${PREFIX}
-MODEL_PATH=/app/S4A-Models/
-DATASET_PATH=/app/dataset/
-COCO_PATH=${MODEL_PATH}/coco_files/
-CONF_DIR=${MODEL_PATH}/conf/
+#MODEL_PATH=/app/S4A-Models/
+#DATASET_PATH=/app/dataset/
+#COCO_PATH=${MODEL_PATH}/coco_files/
 
 ME=$(basename $0)
 CONF=${ME%.sh}.conf
 [[ ! -f "$CONF_DIR"/s4a.conf ]] || . "$CONF_DIR"/s4a.conf
 [[ ! -f "$CONF_DIR"/"$CONF" ]] || . "$CONF_DIR"/"$CONF"
 [[ ! -f "$CONF" ]]             || . "$CONF"
+
+[[ "$1" == '-e' ]] && EPOCHS=$2
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${RESULTS_PATH}" >&2
 

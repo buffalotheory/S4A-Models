@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import seaborn as sns
 
+conf_matrix_acc_test = False
 
 def print_model_stats(model):
     '''
@@ -191,6 +192,11 @@ class ConvLSTM(pl.LightningModule):
         self.avg_train_losses = []
         self.avg_val_losses = []
         self.best_loss = None
+
+        self.epoch_train_accs = []
+        self.epoch_valid_accs = []
+        self.avg_train_accs = []
+        self.avg_val_accs = []
 
         num_discrete_labels = len(set(linear_encoder.values()))
         self.num_discrete_labels = num_discrete_labels
@@ -359,6 +365,28 @@ class ConvLSTM(pl.LightningModule):
         self.scheduler = pla_lr_scheduler['scheduler']
         return [optimizer], [pla_lr_scheduler]
 
+    def calculate_accuracy2(self, pred, label):
+        #logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label)}')
+        logging.debug(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label.cpu().detach())}, label dtype: {label.dtype}')
+        logging.debug(f'label sample: {label[0,0,:]}')
+        logging.debug(f'pred shape: {pred.shape}, pred non-zero: {np.count_nonzero(pred.cpu().detach())}, pred.dtype: {pred.dtype}')
+        logging.debug(f'pred sample: {pred[0,0,0,:]}')
+
+        winners = pred.argmax(dim=1)
+        logging.debug(f'winners shape: {winners.shape}, winners non-zero: {np.count_nonzero(winners.cpu().detach())}, winners.dtype: {winners.dtype}')
+        logging.debug(f'winners sample: {winners[0,0,:]}')
+
+        correct = (label != 0) & (label == winners)
+        incorrect = (label != 0) & (label != winners)
+        logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
+        logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
+
+        #acc = self.accuracy(pred, label, average='weighted')
+        ncorrect = np.count_nonzero(correct.cpu().detach())
+        nincorrect = np.count_nonzero(incorrect.cpu().detach())
+        acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
+        #acc = self.accuracy(pred, label)
+        return acc
 
     def training_step(self, batch, batch_idx):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, batch keys: {batch.keys()}, self.trainer.num_training_batches: {trainer.num_training_batches}")
@@ -374,7 +402,7 @@ class ConvLSTM(pl.LightningModule):
             parcels = batch['parcels']  # (B, H, W)
             #print(f'\nparcels[0]:\n{parcels[0]}')
             parcels_K = parcels[:, None, :, :].repeat(1, pred.size(1), 1, 1)  # (B, K, H, W)
-            logging.info(f'parcels shape: {parcels.shape}, parcel true: {parcels.sum()}, parcels_K.shape: {parcels_K.shape}')
+            #logging.info(f'parcels shape: {parcels.shape}, parcel true: {parcels.sum()}, parcels_K.shape: {parcels_K.shape}')
 
             # Note: a new masked array must be created in order to avoid inplace
             # operations on the label/pred variables. Otherwise the optimizer
@@ -397,28 +425,10 @@ class ConvLSTM(pl.LightningModule):
             #print(f'\nlabel[0]:\n{label[0]}')
 
             pred = pred_masked.clone()
-
             loss = self.lossfunction(pred, label)
-
             loss = loss / parcels.sum()
 
-            #logging.info(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label)}')
-            logging.debug(f'label shape: {label.shape}, label non-zero: {np.count_nonzero(label.cpu().detach())}, label dtype: {label.dtype}')
-            logging.debug(f'label sample: {label[0,0,:]}')
-            logging.debug(f'pred shape: {pred.shape}, pred non-zero: {np.count_nonzero(pred.cpu().detach())}, pred.dtype: {pred.dtype}')
-            logging.debug(f'pred sample: {pred[0,0,0,:]}')
-            winners = pred.argmax(dim=1)
-            logging.debug(f'winners shape: {winners.shape}, winners non-zero: {np.count_nonzero(winners.cpu().detach())}, winners.dtype: {winners.dtype}')
-            logging.debug(f'winners sample: {winners[0,0,:]}')
-            correct = (label != 0) & (label == winners)
-            incorrect = (label != 0) & (label != winners)
-            logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
-            logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
-            #acc = self.accuracy(pred, label, average='weighted')
-            ncorrect = np.count_nonzero(correct.cpu().detach())
-            nincorrect = np.count_nonzero(incorrect.cpu().detach())
-            acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
-            #acc = self.accuracy(pred, label)
+            acc = self.calculate_accuracy2(pred, label)
             acc2 = self.train_acc(pred, label)
 
             self.log('train_acc_step', acc)
@@ -433,6 +443,7 @@ class ConvLSTM(pl.LightningModule):
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
 
+        self.epoch_train_accs.append(acc)
         self.epoch_train_losses.append(loss_aver)
         if self.wandb:
             wandb.log({"loss": loss_aver, "accuracy": acc})
@@ -442,10 +453,15 @@ class ConvLSTM(pl.LightningModule):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}")
 
         logging.debug(f'label dtype: {label.dtype}, label.shape: {label.shape}, label[0]: {label[0]}')
-        for i in range(label.shape[0]):
-            l = label[i].cpu().detach().to(torch.long)
-            p = pred[i].cpu().detach().to(torch.long)
-            self.confusion_matrix[l,p] += 1
+
+        #for i in range(label.shape[0]):
+        #    l = label[i].cpu().detach().to(torch.long)
+        #    p = pred[i].cpu().detach().to(torch.long)
+        #    self.confusion_matrix[l,p] += 1
+
+        if conf_matrix_acc_test:
+            for i in range(label.shape[0]):
+                self.confusion_matrix[label[i], pred[i]] += 1
 
         np.set_printoptions(formatter={'float': '{: 6.0f}'.format})
         #print(f'confusion matrix:\n{self.confusion_matrix}\n')
@@ -486,35 +502,24 @@ class ConvLSTM(pl.LightningModule):
 
             loss = loss / parcels.sum()
 
-            winners = pred.argmax(dim=1)
-            correct = (label != 0) & (label == winners)
-            incorrect = (label != 0) & (label != winners)
-            logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
-            logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
-            #acc = self.accuracy(pred, label, average='weighted')
-            ncorrect = np.count_nonzero(correct.cpu().detach())
-            nincorrect = np.count_nonzero(incorrect.cpu().detach())
-            acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
-            #acc = self.accuracy(pred, label)
-
-            self.log('val_acc_step', acc)
-
-            logging.info(f'val step: loss: {loss}, accuracy: {acc}')
-
         else:
             acc = None
             loss = self.lossfunction(pred, label)
 
+        acc = self.calculate_accuracy2(pred, label)
         acc2 = self.valid_acc(pred, label)
+        logging.info(f'val step: loss: {loss}, accuracy: {acc}, acc2: {acc2}')
         self.log('val_acc_step', acc)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
 
+        self.epoch_valid_accs.append(acc)
         self.epoch_valid_losses.append(loss_aver)
 
-        #for i in range(label.shape[0]):
-        #    self.confusion_matrix[label[i], pred[i]] += 1
+        if conf_matrix_acc_test:
+            for i in range(label.shape[0]):
+                self.confusion_matrix[label[i], pred[i]] += 1
 
         return {'val_loss': loss}
 
@@ -585,13 +590,21 @@ class ConvLSTM(pl.LightningModule):
 
         self.log('train_loss', train_loss, prog_bar=True)
 
+        train_acc = np.nanmean(self.epoch_train_accs)
+        self.avg_train_accs.append(train_acc)
+
+        with open(self.run_path / "avg_train_accs.txt", 'a') as f:
+            f.write(f'{self.current_epoch}: {train_acc}\n')
+
         # Clear list to track next epoch
         self.epoch_train_losses = []
+        self.epoch_train_accs = []
 
-        acc = self.calculate_accuracy()
-        #self.log('train_acc_epoch', acc)
-        logging.info(f'train_acc_epoch: {acc}')
-        #self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
+        if conf_matrix_acc_test:
+            acc_confusion_matrix = self.calculate_accuracy()
+            #self.log('train_acc_epoch', acc)
+            logging.info(f'train_acc_epoch (confusion_matrix): {acc}')
+            self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
     def on_validation_epoch_end(self):
@@ -604,13 +617,21 @@ class ConvLSTM(pl.LightningModule):
 
         self.log('val_loss', valid_loss, prog_bar=True)
 
+        valid_acc = np.nanmean(self.epoch_valid_accs)
+        self.avg_val_accs.append(valid_acc)
+
+        with open(self.run_path / "avg_val_accs.txt", 'a') as f:
+            f.write(f'{self.current_epoch}: {valid_acc}\n')
+
         # Clear list to track next epoch
         self.epoch_valid_losses = []
+        self.epoch_valid_accs = []
 
-        acc = self.calculate_accuracy()
-        logging.info(f'val_acc_epoch: {acc}')
-        #self.log('val_acc_epoch', acc)
-        self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
+        if conf_matrix_acc_test:
+            acc = self.calculate_accuracy()
+            logging.info(f'val_acc_epoch: {acc}')
+            #self.log('val_acc_epoch', acc)
+            self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
     def on_test_epoch_end(self):
