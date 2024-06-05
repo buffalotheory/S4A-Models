@@ -6,7 +6,7 @@
 set -x
 
 MODEL=convlstm
-EPOCHS=10
+EPOCHS=2
 PREFIX=overfit
 BATCH_SIZE=4
 NUM_WORKERS=8

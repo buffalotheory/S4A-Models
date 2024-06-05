@@ -139,9 +139,12 @@ run_all:
 list_tests:
 	@echo "test scripts: $(SH_TEST_FILES)"
 
+
+DATASET_PREFIX = dataset_1000
+DATASET_DIR = ../$(DATASET_PREFIX)/netcdf
 make_split:
 	# Produce a new train/val/test data split based on the entire dataset
-	python3 coco_data_split.py --how='random' --data_path=../dataset/
+	python3 coco_data_split.py --how='random' --data_path=$(DATASET_DIR) --prefix=$(DATASET_PREFIX)
 
 view_paper:
 	$(VIEWER) $(PAPER) &

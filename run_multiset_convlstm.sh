@@ -15,16 +15,15 @@ GPUS=2
 [[ "$1" == '-e' ]] && EPOCHS=$2
 
 RESULTS_PATH=${PREFIX}
-MODEL_PATH=/app/S4A-Models/
-DATASET_PATH=/app/dataset/
+MODEL_PATH=.
+DATASET_PATH=../dataset/
 COCO_PATH=${MODEL_PATH}/coco_files/
 CONF_DIR=${MODEL_PATH}/conf/
 
 ME=$(basename $0)
-CONF=${ME%.sh}.conf
-[[ ! -f "$CONF_DIR"/s4a.conf ]] || . "$CONF_DIR"/s4a.conf
-[[ ! -f "$CONF_DIR"/"$CONF" ]] || . "$CONF_DIR"/"$CONF"
-[[ ! -f "$CONF" ]]             || . "$CONF"
+MYCONF=${ME%.sh}.conf
+[[ ! -f "$CONF_DIR"/s4a.conf ]]  || . "$CONF_DIR"/s4a.conf
+[[ ! -f "$CONF_DIR"/"$MYCONF" ]] || . "$CONF_DIR"/"$MYCONF"
 
 echo "[$(date "+%Y-%m-%d %H:%M:%S")]:INFO:${0}:starting pad_experiments.py with model ${MODEL}.  logging to ${RESULTS_PATH}" >&2
 

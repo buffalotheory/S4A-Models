@@ -378,15 +378,21 @@ class ConvLSTM(pl.LightningModule):
 
         correct = (label != 0) & (label == winners)
         incorrect = (label != 0) & (label != winners)
-        logging.info(f'correct {np.count_nonzero(correct.cpu().detach())}')
-        logging.info(f'incorrect {np.count_nonzero(incorrect.cpu().detach())}')
+        corr = np.count_nonzero(correct.cpu().detach())
+        incorr = np.count_nonzero(incorrect.cpu().detach())
+        total = corr + incorr
+        if total == 0:
+            corrpcnt = 0
+        else:
+            corrpcnt = corr * 100. / total
+        logging.info(f'correct: {corr} of {total} / {corrpcnt:.3f}%')
 
         #acc = self.accuracy(pred, label, average='weighted')
         ncorrect = np.count_nonzero(correct.cpu().detach())
         nincorrect = np.count_nonzero(incorrect.cpu().detach())
         acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
         #acc = self.accuracy(pred, label)
-        return acc
+        return acc, total
 
     def training_step(self, batch, batch_idx):
         #logging.debug(f"traning step: batch_idx: {batch_idx}, batch keys: {batch.keys()}, self.trainer.num_training_batches: {trainer.num_training_batches}")
@@ -411,7 +417,7 @@ class ConvLSTM(pl.LightningModule):
 
             mask = (parcels) & (label != 0)
             mask_K = (parcels_K) & (label[:, None, :, :].repeat(1, pred.size(1), 1, 1) != 0)
-            logging.info(f'mask shape: {mask.shape}, mask true: {mask.sum()}, mask_K.shape: {mask_K.shape}')
+            logging.info(f'mask shape: {mask.shape}, parcel pixels with non-zero labels: {mask.sum()}, mask_K.shape: {mask_K.shape}')
 
             label_masked = label.clone()
             label_masked[~mask] = 0
@@ -428,7 +434,7 @@ class ConvLSTM(pl.LightningModule):
             loss = self.lossfunction(pred, label)
             loss = loss / parcels.sum()
 
-            acc = self.calculate_accuracy2(pred, label)
+            acc, total = self.calculate_accuracy2(pred, label)
             acc2 = self.train_acc(pred, label)
 
             self.log('train_acc_step', acc)
@@ -438,12 +444,14 @@ class ConvLSTM(pl.LightningModule):
 
         else:
             acc = None
+            total = 0
             loss = self.lossfunction(pred, label)
 
         # Compute total loss for current batch
         loss_aver = loss.item() * inputs.shape[0]
 
-        self.epoch_train_accs.append(acc)
+        if total > 0:
+            self.epoch_train_accs.append(acc)
         self.epoch_train_losses.append(loss_aver)
         if self.wandb:
             wandb.log({"loss": loss_aver, "accuracy": acc})
@@ -495,20 +503,17 @@ class ConvLSTM(pl.LightningModule):
             pred_masked[~mask_K] = 0
 
             label = label_masked.clone()
-            logging.info(f'label shape: {label.shape}')
             pred = pred_masked.clone()
-
             loss = self.lossfunction(pred, label)
-
             loss = loss / parcels.sum()
 
         else:
             acc = None
             loss = self.lossfunction(pred, label)
 
-        acc = self.calculate_accuracy2(pred, label)
+        acc, total = self.calculate_accuracy2(pred, label)
         acc2 = self.valid_acc(pred, label)
-        logging.info(f'val step: loss: {loss}, accuracy: {acc}, acc2: {acc2}')
+        logging.info(f'val step: loss: {loss:.3f}, accuracy: {acc:.3f}, acc2: {acc2:.3f}')
         self.log('val_acc_step', acc)
 
         # Compute total loss for current batch
