@@ -10,7 +10,7 @@ EPOCHS=10
 PREFIX=overfit
 BATCH_SIZE=4
 NUM_WORKERS=16
-GPUS=2
+GPUS=1
 
 [[ "$1" == '-e' ]] && EPOCHS=$2
 

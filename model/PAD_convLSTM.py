@@ -355,7 +355,7 @@ class ConvLSTM(pl.LightningModule):
         }
         #num_batches = len(self.train_dataloader()) / self.trainer.accumulate_grad_batches
         #logging.debug(f'self.trainer.accumulate_grad_batches: {self.trainer.accumulate_grad_batches}')
-        logging.debug(f"self.trainer.num_training_batches: {self.trainer.num_training_batches}")
+        logging.info(f"self.trainer.num_training_batches: {self.trainer.num_training_batches}")
         self.scheduler = pla_lr_scheduler['scheduler']
         return [optimizer], [pla_lr_scheduler]
 
@@ -419,10 +419,12 @@ class ConvLSTM(pl.LightningModule):
             nincorrect = np.count_nonzero(incorrect.cpu().detach())
             acc = np.float32(ncorrect) / (np.float32(ncorrect) + np.float32(nincorrect))
             #acc = self.accuracy(pred, label)
+            acc2 = self.train_acc(pred, label)
 
             self.log('train_acc_step', acc)
+            #logging.info(f'training accuracy: method1={acc}, method2={acc2}')
 
-            logging.info(f'train step: loss: {loss}, accuracy: {acc}')
+            logging.info(f'train step: loss: {loss}, accuracy: {acc} (acc2={acc2})')
 
         else:
             acc = None
@@ -433,7 +435,7 @@ class ConvLSTM(pl.LightningModule):
 
         self.epoch_train_losses.append(loss_aver)
         if self.wandb:
-            wandb.log({"loss": loss_aver, "accuracy": self.accuracy})
+            wandb.log({"loss": loss_aver, "accuracy": acc})
 
         # torch.nn.utils.clip_grad_value_(self.parameters(), clip_value=10.0)
         #logging.debug(f"traning step: batch_idx: {batch_idx}, self.trainer.num_training_batches: {self.trainer.num_training_batches}, loss: {loss_aver}, lr: {self.scheduler.get_last_lr()}")
@@ -503,7 +505,7 @@ class ConvLSTM(pl.LightningModule):
             acc = None
             loss = self.lossfunction(pred, label)
 
-        acc2 = self.accuracy(pred, label)
+        acc2 = self.valid_acc(pred, label)
         self.log('val_acc_step', acc)
 
         # Compute total loss for current batch
@@ -586,9 +588,9 @@ class ConvLSTM(pl.LightningModule):
         # Clear list to track next epoch
         self.epoch_train_losses = []
 
-        self.log('train_acc_epoch', self.accuracy)
         acc = self.calculate_accuracy()
-        logging.info(f'accuracy: {acc}')
+        #self.log('train_acc_epoch', acc)
+        logging.info(f'train_acc_epoch: {acc}')
         #self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
@@ -605,7 +607,9 @@ class ConvLSTM(pl.LightningModule):
         # Clear list to track next epoch
         self.epoch_valid_losses = []
 
-        self.log('val_acc_epoch', self.accuracy)
+        acc = self.calculate_accuracy()
+        logging.info(f'val_acc_epoch: {acc}')
+        #self.log('val_acc_epoch', acc)
         self.confusion_matrix = torch.zeros([self.num_discrete_labels, self.num_discrete_labels])
 
 
@@ -810,7 +814,8 @@ class ConvLSTM(pl.LightningModule):
 
     def calculate_accuracy(self):
         logging.info(f'calculating accuracy')
-        self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
+        if not isinstance(self.confusion_matrix, np.ndarray):
+            self.confusion_matrix = self.confusion_matrix.cpu().detach().numpy()
         logging.info(f'fetched confusion matrix; shape: {self.confusion_matrix.shape}')
 
         self.confusion_matrix = self.confusion_matrix[1:, 1:]  # Drop zero label
