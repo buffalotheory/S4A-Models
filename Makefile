@@ -1,89 +1,90 @@
-# Makefile
-#
-# An original work by Bryant Hansen
-#
-# This describes a set of tools, techniques, and best-practices for managing
-# a Deep-Learning-based Earth Observation project.
-#
-#  -- type 'make' on the command line, in the current directory, for help --
-#
-# The tools are generally launched from the command line, which is required
-# by the top-level Pytorch Lightning framework.  It is not well-suited
-# for notebooks and graphical displays would require significantly-greater
-# complexity.
-#
-# The tools are generally Python commands executed from a shell environment
-# These often have many options listed
-# The Sen4AgriNet project lists a standard execution requires a list of
-#
-#
-# This Makefile specifies a tab-completable set of commands, which can be
-# executed on the bash shell.
-#
-# The commands are the most-common commands that are currently used in the
-# project.  These commands are generally related to:
-#
-# 1. Building Train/Test Splits
-# 2. Executing a model
-# 3. Resuming execution after interruption
-# 4. Conducting basic self-tests to verify the operating environment
-# 5.
-#
-# This not only automates the general operations of the project, but it also
-# serves to document these standard practices in a way that's clear, consise,
-# and verifyable.
-#
-# There are many added benefits to using a Makefile for command-line project
-# management:
-#
-# * Dependencies: lists of dependencies can be required for any stage
-#
-#   - Allows ordered sequences and dependency trees to be specified and executed
-#   - Facilitates the execution of tasks in parallel
-#     + Leaves can be executed as a large, parallel list
-#     + Branches can also be executed in parallel
-#     + All eventually meet at the end target, which may be part of a list
-#
-# * Parallel execution
-#
-# * Recursive self-referencing
-#
-# * Universally-available
-#
-#   Gnu Make runs on almost every platform, from the tiniest embedded shells,
-#   to warehouse-scale computers
-#
-#
-# ## Disadvantages
-#
-# * Poor support for spaces in file and directory names
-#   - It is a long-standing tradition to use spaces as delimiters
-#   - Nearly all data types are strings
-#   - Some work-arounds are possible, but it becomes error-prone with
-#     increasing complexity
-#
-#
-# # Usage
-#
-# To get started, type 'make', a space, and the tab character twice
-#
-#    make <tab><tab>
-#
-# The list of available targets should appear below
-#
-# user@host -> make
-# Makefile                    run_all
-# default                     run_bigset1_convlstm
-# help                        run_bigset79G_convlstm
-# list_tests                  run_checkpoint_resume_test
-# make_split                  run_multiset_convlstm
-# metal_test                  run_overfit_convlstm
-# overfit_lstm                run_pad_convstar
-# pl_test                     run_unet
-# resume_bigset1_convlstm     show_tests
-# resume_bigset79G_convlstm   test_all
-# resume_multiset_convlstm    view_paper
-# resume_overfit_convlstm     wandb_test
+default:
+	# Makefile
+	#
+	# An original work by Bryant Hansen
+	#
+	# This describes a set of tools, techniques, and best-practices for managing
+	# a Deep-Learning-based Earth Observation project.
+	#
+	#  -- type 'make' on the command line, in the current directory, for help --
+	#
+	# The tools are generally launched from the command line, which is required
+	# by the top-level Pytorch Lightning framework.  It is not well-suited
+	# for notebooks and graphical displays would require significantly-greater
+	# complexity.
+	#
+	# The tools are generally Python commands executed from a shell environment
+	# These often have many options listed
+	# The Sen4AgriNet project lists a standard execution requires a list of
+	#
+	#
+	# This Makefile specifies a tab-completable set of commands, which can be
+	# executed on the bash shell.
+	#
+	# The commands are the most-common commands that are currently used in the
+	# project.  These commands are generally related to:
+	#
+	# 1. Building Train/Test Splits
+	# 2. Executing a model
+	# 3. Resuming execution after interruption
+	# 4. Conducting basic self-tests to verify the operating environment
+	# 5.
+	#
+	# This not only automates the general operations of the project, but it also
+	# serves to document these standard practices in a way that's clear, consise,
+	# and verifyable.
+	#
+	# There are many added benefits to using a Makefile for command-line project
+	# management:
+	#
+	# * Dependencies: lists of dependencies can be required for any stage
+	#
+	#   - Allows ordered sequences and dependency trees to be specified and executed
+	#   - Facilitates the execution of tasks in parallel
+	#     + Leaves can be executed as a large, parallel list
+	#     + Branches can also be executed in parallel
+	#     + All eventually meet at the end target, which may be part of a list
+	#
+	# * Parallel execution
+	#
+	# * Recursive self-referencing
+	#
+	# * Universally-available
+	#
+	#   Gnu Make runs on almost every platform, from the tiniest embedded shells,
+	#   to warehouse-scale computers
+	#
+	#
+	# ## Disadvantages
+	#
+	# * Poor support for spaces in file and directory names
+	#   - It is a long-standing tradition to use spaces as delimiters
+	#   - Nearly all data types are strings
+	#   - Some work-arounds are possible, but it becomes error-prone with
+	#     increasing complexity
+	#
+	#
+	# # Usage
+	#
+	# To get started, type 'make', a space, and the tab character twice
+	#
+	#    make <tab><tab>
+	#
+	# The list of available targets should appear below
+	#
+	# user@host -> make
+	# Makefile                    run_all
+	# default                     run_bigset1_convlstm
+	# help                        run_bigset79G_convlstm
+	# list_tests                  run_checkpoint_resume_test
+	# make_split                  run_multiset_convlstm
+	# metal_test                  run_overfit_convlstm
+	# overfit_lstm                run_pad_convstar
+	# pl_test                     run_unet
+	# resume_bigset1_convlstm     show_tests
+	# resume_bigset79G_convlstm   test_all
+	# resume_multiset_convlstm    view_paper
+	# resume_overfit_convlstm     wandb_test
 #
 
 REFS = ../references/papers
@@ -113,7 +114,7 @@ DT = $(shell date "+%Y%m%d_%H%M%S")
 	view_paper
 
 # If no options are specified
-default: help
+#default: help
 
 help:
 	cat Makefile | sed -n "1,/^[^\#]/p" | sed "/^[^\#]/d"
@@ -140,11 +141,23 @@ list_tests:
 	@echo "test scripts: $(SH_TEST_FILES)"
 
 
-DATASET_PREFIX = dataset_1000
+DATASET_PREFIX = dataset_10
 DATASET_DIR = ../$(DATASET_PREFIX)/netcdf
-make_split:
+split:
 	# Produce a new train/val/test data split based on the entire dataset
 	python3 coco_data_split.py --how='random' --data_path=$(DATASET_DIR) --prefix=$(DATASET_PREFIX)
+
+DATASET_PREFIX = dataset_10
+DATASET_DIR = ../$(DATASET_PREFIX)/netcdf
+weights:
+	# Produce a new train/val/test data split based on the entire dataset
+	python3 compute_class_weights.py \
+		--coco_prefix=$(DATASET_PREFIX) \
+		--medians_prefix=$(DATASET_PREFIX) \
+		--netcdf_path=$(DATASET_DIR) \
+		--out_prefix=TEST1 \
+		--ignore_zero \
+		--fixed_window
 
 view_paper:
 	$(VIEWER) $(PAPER) &

@@ -173,3 +173,20 @@ If you use our work, please cite:
   doi={10.1109/JSTARS.2022.3164771}
 }
 ```
+
+# Analysis
+
+This is a fork of the original project.
+
+As a starting point, some analysis infrastructure has been added.
+
+This analysis is based mostly on Makefiles and shell scripts.
+
+Some goals of this are to run all of the steps for a variety of specific test configurations.
+
+Test configurations:
+
+* Patch set sizes of 1, 2, 10, 100, 1000, and full
+* Operating modes of train, resume, and test
+* Choice of available model
+* Deployment target of local PC or remote GPU cluster

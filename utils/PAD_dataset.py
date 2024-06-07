@@ -380,16 +380,20 @@ class PADDataset(Dataset):
                                 dtype=self.medians_dtype)
 
         padded_id = f'{str(subpatch_id).rjust(len(str(self.num_subpatches)), "0")}'
+        print(f'padded_id: {padded_id}, num_subpatches: {self.num_subpatches}')
 
-        median_files = sorted(path.glob(f'sub{padded_id}_bin*'))
-        print(f'path: {path}, subpatch_id: {subpatch_id}, median_files: glob=sub{padded_id}_bin*, len(median_files): {len(median_files)}, files={median_files}')
 
         if self.fixed_window:
             start_month = 3
             end_month = 9
+            median_files = sorted(path.glob(f'medians_*.npy'))
+            print(f'path: {path}, subpatch_id: {subpatch_id}, median_files: glob=medians_{padded_id}*.npy, len(median_files): {len(median_files)}, files={median_files}')
         else:
             start_month = start_bin
             end_month = start_bin + self.window_len
+            #median_files = sorted(path.glob(f'sub{padded_id}_bin*'))
+            median_files = sorted(path.glob(f'medians_{padded_id}*.npy'))
+            print(f'path: {path}, subpatch_id: {subpatch_id}, median_files: glob=medians_{padded_id}*.npy, len(median_files): {len(median_files)}, files={median_files}')
 
         for i, bin_idx in enumerate(range(start_month, end_month)):
             print(f'month idx: {i}, bin_idx: {bin_idx}')

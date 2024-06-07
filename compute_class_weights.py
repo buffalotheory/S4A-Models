@@ -77,16 +77,19 @@ if __name__ == '__main__':
 
         # Count pixels for each class
         class_pixel_counts = {c: 0 for c in LINEAR_ENCODER.values()}
+        print(f'class_pixel_counts: {class_pixel_counts}')
 
         if args.ignore_zero:
             del class_pixel_counts[0]
 
+        print(f'len(dm.dataset_train): {len(dm.dataset_train)}')
+        assert len(dm.dataset_train) > 0, "No files found"
         for idx in range(len(dm.dataset_train)):
             try:
                 batch = dm.dataset_train.__getitem__(idx)
             except:
-                print(f'IDX: {idx}')
-                break
+                print(f'IDX: {idx}.  Cannot extract labels and parcels from patch')
+                continue
             labels = batch['labels']
             parcels = batch['parcels']
 
@@ -94,6 +97,7 @@ if __name__ == '__main__':
             labels = labels[parcels]
 
             values, counts = np.unique(labels, return_counts=True)
+            print(f'    values: {values}, counts: {counts}')
             for i in range(len(values)):
                 if values[i] not in class_pixel_counts.keys(): continue
 
@@ -102,8 +106,10 @@ if __name__ == '__main__':
         pickle.dump(class_pixel_counts, open(pixel_cnts_name, 'wb'))
 
     # Compute weights for each class
+    print(f'class_pixel_counts: {class_pixel_counts}')
     all_counts = sum(list(class_pixel_counts.values()))
     n_classes = len(class_pixel_counts)
+    print(f'all_counts: {all_counts}, n_classes: {n_classes}')
     class_weights = {k: all_counts / (n_classes * v) for k, v in class_pixel_counts.items()}
 
     pickle.dump(class_weights, open(out_name, 'wb'))
